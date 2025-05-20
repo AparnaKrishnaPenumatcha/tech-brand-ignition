@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface ResumeData {
   personalInfo: {
@@ -24,9 +25,10 @@ interface ResumeData {
 
 interface AboutProps {
   resumeData?: ResumeData;
+  resumeUrl?: string | null;
 }
 
-const About: React.FC<AboutProps> = ({ resumeData }) => {
+const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
   const about = resumeData?.personalInfo?.about || "Professional with a passion for creating impactful solutions";
   const education = resumeData?.education?.[0] || { 
     degree: "Bachelor's Degree in Computer Science",
@@ -38,6 +40,24 @@ const About: React.FC<AboutProps> = ({ resumeData }) => {
     description: "Across various industries" 
   };
 
+  const handleResumeDownload = () => {
+    if (resumeUrl) {
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = resumeUrl;
+      link.download = 'resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      toast({
+        title: "Resume not available",
+        description: "There was an issue retrieving your resume file",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <section id="about" className="py-24 bg-white">
       <div className="container-custom">
@@ -47,11 +67,12 @@ const About: React.FC<AboutProps> = ({ resumeData }) => {
             <div className="rounded-2xl overflow-hidden shadow-lg relative">
               {/* Placeholder image */}
               <div className="aspect-[4/5] bg-gradient-to-br from-navy-100 to-navy-200 flex items-center justify-center">
-                <div className="text-navy-500 font-medium">About Image</div>
+                <span className="text-navy-500 font-medium">About Image</span>
               </div>
               
               {/* Decoration */}
-              <div className="absolute -z-10 -bottom-6 -right-6 w-24 h-24 bg-electric-500 rounded-lg"></div>
+              <div className="absolute -z-10 w-16 h-16 bg-electric-500 rounded-lg -bottom-4 -left-4 md:-bottom-6 md:-left-6"></div>
+              <div className="absolute -z-10 w-12 h-12 bg-teal-600 rounded-full -top-2 -right-2 md:-top-4 md:-right-4"></div>
             </div>
           </div>
           
@@ -93,10 +114,11 @@ const About: React.FC<AboutProps> = ({ resumeData }) => {
             </div>
             
             <div className="pt-2">
-              <Button className="bg-electric-500 hover:bg-electric-600 text-white">
-                <a href="/resume.pdf" target="_blank" rel="noopener noreferrer">
-                  Download Resume
-                </a>
+              <Button 
+                className="bg-electric-500 hover:bg-electric-600 text-white"
+                onClick={handleResumeDownload}
+              >
+                Download Resume
               </Button>
             </div>
           </div>

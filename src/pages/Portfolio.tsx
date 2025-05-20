@@ -40,6 +40,7 @@ interface ResumeData {
 
 const Portfolio: React.FC = () => {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +60,11 @@ const Portfolio: React.FC = () => {
     try {
       const parsedData = JSON.parse(storedData) as ResumeData;
       setResumeData(parsedData);
+      
+      // Create a downloadable URL for the resume if fileData exists
+      if (typeof parsedData.fileData === 'string' && parsedData.fileData.startsWith('data:')) {
+        setResumeUrl(parsedData.fileData);
+      }
     } catch (error) {
       console.error("Error parsing resume data:", error);
       toast({
@@ -89,7 +95,7 @@ const Portfolio: React.FC = () => {
       <Header />
       <main>
         <Hero resumeData={resumeData} />
-        <About resumeData={resumeData} />
+        <About resumeData={resumeData} resumeUrl={resumeUrl} />
         <Skills resumeData={resumeData} />
         <Projects />
         <Contact />
