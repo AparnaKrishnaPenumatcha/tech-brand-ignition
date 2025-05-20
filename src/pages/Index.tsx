@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -39,67 +38,55 @@ const Index: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // In a real application, you would process the PDF here
-      // For now, we'll simulate processing and store the file in localStorage
+      // Create FormData and append the file
+      const formData = new FormData();
+      formData.append('file', file);
       
-      // Read file as data URL to store in localStorage
+      // Send the file to the backend
+      const res = await fetch('http://localhost:8000/parse-resume', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Server responded with status: ${res.status}`);
+      }
+      
+      // Get the processed data from the response
+      const resumeData = await res.json();
+      
+      // Store the file as data URL for download functionality
       const reader = new FileReader();
       reader.onload = () => {
-        const resumeData = {
+        // Combine the processed data with the file data
+        const completeResumeData = {
+          ...resumeData,
           fileName: file.name,
           fileData: reader.result,
           uploadDate: new Date().toISOString(),
-          // Mock data that would be extracted from resume
-          personalInfo: {
-            name: "Your Name",
-            title: "Professional Title",
-            email: "email@example.com",
-            phone: "(123) 456-7890",
-            location: "City, Country",
-            about: "Professional with a passion for creating impactful solutions"
-          },
-          education: [
-            {
-              degree: "Bachelor's Degree in Computer Science",
-              institution: "University Name",
-              year: "20XX-20XX"
-            }
-          ],
-          experience: {
-            years: "X+",
-            description: "Across various industries"
-          },
-          skills: [
-            { name: "JavaScript", level: 90, category: "Frontend" },
-            { name: "TypeScript", level: 85, category: "Frontend" },
-            { name: "React", level: 90, category: "Frontend" },
-            { name: "Node.js", level: 80, category: "Backend" }
-          ]
         };
         
         // Save to localStorage
-        localStorage.setItem('resumeData', JSON.stringify(resumeData));
+        localStorage.setItem('resumeData', JSON.stringify(completeResumeData));
         
         // Navigate to portfolio page
-        setTimeout(() => {
-          setIsLoading(false);
-          toast({
-            title: "Resume uploaded successfully",
-            description: "Building your portfolio...",
-          });
-          navigate('/portfolio');
-        }, 1500);
+        setIsLoading(false);
+        toast({
+          title: "Resume processed successfully",
+          description: "Building your portfolio...",
+        });
+        navigate('/portfolio');
       };
       
       reader.readAsDataURL(file);
     } catch (error) {
       setIsLoading(false);
+      console.error("Error processing resume:", error);
       toast({
-        title: "Upload failed",
-        description: "There was an error uploading your resume",
+        title: "Processing failed",
+        description: "There was an error processing your resume. Please try again.",
         variant: "destructive",
       });
-      console.error("Error uploading resume:", error);
     }
   };
 
