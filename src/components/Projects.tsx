@@ -6,17 +6,25 @@ import { Button } from '@/components/ui/button';
 interface Project {
   title: string;
   description: string;
-  image: string;
+  image?: string;
   tags: string[];
-  links: {
+  links?: {
     demo?: string;
     code?: string;
   };
 }
 
-const Projects: React.FC = () => {
-  // Sample projects data - replace with your own
-  const projects: Project[] = [
+interface ResumeData {
+  projects?: Project[];
+}
+
+interface ProjectsProps {
+  resumeData?: ResumeData;
+}
+
+const Projects: React.FC<ProjectsProps> = ({ resumeData }) => {
+  // Sample projects data or resume projects if available
+  const projects: Project[] = resumeData?.projects || [
     {
       title: "Project One",
       description: "A comprehensive web application built with React and Node.js that helps users manage their tasks efficiently with real-time updates.",
@@ -87,7 +95,7 @@ const Projects: React.FC = () => {
                 </div>
                 
                 <div className="flex gap-3 mt-4">
-                  {project.links.demo && (
+                  {project.links?.demo && (
                     <Button 
                       variant="default" 
                       className="bg-electric-500 hover:bg-electric-600 text-white text-sm"
@@ -107,7 +115,7 @@ const Projects: React.FC = () => {
                     </Button>
                   )}
                   
-                  {project.links.code && (
+                  {project.links?.code && (
                     <Button 
                       variant="outline" 
                       className="text-navy-700 text-sm"

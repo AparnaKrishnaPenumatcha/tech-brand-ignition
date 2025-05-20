@@ -30,12 +30,29 @@ interface ResumeData {
   experience: {
     years: string;
     description: string;
+    positions?: Array<{
+      title: string;
+      company: string;
+      duration: string;
+      description: string;
+    }>;
   };
   skills: Array<{
     name: string;
     level: number;
     category: string;
   }>;
+  projects?: Array<{
+    title: string;
+    description: string;
+    tags: string[];
+  }>;
+  certifications?: Array<{
+    name: string;
+    issuer: string;
+    year: string;
+  }>;
+  summary?: string;
 }
 
 const Portfolio: React.FC = () => {
@@ -97,7 +114,7 @@ const Portfolio: React.FC = () => {
         <Hero resumeData={resumeData} />
         <About resumeData={resumeData} resumeUrl={resumeUrl} />
         <Skills resumeData={resumeData} />
-        <Projects />
+        <Projects resumeData={resumeData} />
         <Contact />
       </main>
       <Footer />
