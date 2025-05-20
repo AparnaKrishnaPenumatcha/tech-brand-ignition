@@ -8,9 +8,17 @@ interface Skill {
   category: string;
 }
 
-const Skills: React.FC = () => {
-  // Sample skills data - replace with your own
-  const skills: Skill[] = [
+interface ResumeData {
+  skills: Skill[];
+}
+
+interface SkillsProps {
+  resumeData?: ResumeData;
+}
+
+const Skills: React.FC<SkillsProps> = ({ resumeData }) => {
+  // Use resume data if available, otherwise use default skills
+  const skills: Skill[] = resumeData?.skills || [
     { name: "JavaScript", level: 90, category: "Frontend" },
     { name: "TypeScript", level: 85, category: "Frontend" },
     { name: "React", level: 90, category: "Frontend" },
@@ -25,7 +33,8 @@ const Skills: React.FC = () => {
     { name: "Figma", level: 70, category: "Design" },
   ];
 
-  const categories = ["Frontend", "Backend", "Database", "Design", "Tools"];
+  // Extract unique categories from skills
+  const categories = Array.from(new Set(skills.map(skill => skill.category)));
 
   return (
     <section id="skills" className="py-24 bg-navy-50">

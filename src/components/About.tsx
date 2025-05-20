@@ -2,7 +2,42 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
-const About: React.FC = () => {
+interface ResumeData {
+  personalInfo: {
+    name: string;
+    title: string;
+    email: string;
+    phone: string;
+    location: string;
+    about: string;
+  };
+  education: Array<{
+    degree: string;
+    institution: string;
+    year: string;
+  }>;
+  experience: {
+    years: string;
+    description: string;
+  };
+}
+
+interface AboutProps {
+  resumeData?: ResumeData;
+}
+
+const About: React.FC<AboutProps> = ({ resumeData }) => {
+  const about = resumeData?.personalInfo?.about || "Professional with a passion for creating impactful solutions";
+  const education = resumeData?.education?.[0] || { 
+    degree: "Bachelor's Degree in Computer Science",
+    institution: "University Name", 
+    year: "20XX-20XX" 
+  };
+  const experience = resumeData?.experience || { 
+    years: "X+", 
+    description: "Across various industries" 
+  };
+
   return (
     <section id="about" className="py-24 bg-white">
       <div className="container-custom">
@@ -24,11 +59,11 @@ const About: React.FC = () => {
           <div className="w-full md:w-7/12 lg:w-1/2 space-y-6">
             <div>
               <h2 className="text-lg font-semibold text-electric-500 mb-2">About Me</h2>
-              <h3 className="text-3xl font-bold text-navy-900">Professional with a passion for creating impactful solutions</h3>
+              <h3 className="text-3xl font-bold text-navy-900">{about}</h3>
             </div>
             
             <p className="text-navy-600">
-              With over X years of experience in the industry, I've developed a deep understanding of 
+              With over {experience.years} years of experience in the industry, I've developed a deep understanding of 
               building solutions that balance technical excellence with user-centered design. 
               My approach combines analytical thinking with creative problem-solving to deliver 
               results that exceed expectations.
@@ -44,15 +79,15 @@ const About: React.FC = () => {
               <div>
                 <h4 className="text-lg font-semibold text-navy-800">Education</h4>
                 <p className="text-navy-600 mt-2">
-                  Bachelor's Degree in Computer Science<br />
-                  <span className="text-sm text-navy-500">University Name, 20XX-20XX</span>
+                  {education.degree}<br />
+                  <span className="text-sm text-navy-500">{education.institution}, {education.year}</span>
                 </p>
               </div>
               <div>
                 <h4 className="text-lg font-semibold text-navy-800">Experience</h4>
                 <p className="text-navy-600 mt-2">
-                  X+ Years Professional Experience<br />
-                  <span className="text-sm text-navy-500">Across various industries</span>
+                  {experience.years} Years Professional Experience<br />
+                  <span className="text-sm text-navy-500">{experience.description}</span>
                 </p>
               </div>
             </div>
