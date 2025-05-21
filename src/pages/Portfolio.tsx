@@ -46,6 +46,10 @@ interface ResumeData {
     title: string;
     description: string;
     tags: string[];
+    links?: {
+      demo?: string;
+      code?: string;
+    };
   }>;
   certifications?: Array<{
     name: string;

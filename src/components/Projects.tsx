@@ -23,39 +23,44 @@ interface ProjectsProps {
 }
 
 const Projects: React.FC<ProjectsProps> = ({ resumeData }) => {
-  // Sample projects data or resume projects if available
-  const projects: Project[] = resumeData?.projects || [
+  // Default projects to use if no projects in resume data
+  const defaultProjects: Project[] = [
     {
-      title: "Project One",
-      description: "A comprehensive web application built with React and Node.js that helps users manage their tasks efficiently with real-time updates.",
+      title: "SAP Commerce Cloud Implementation",
+      description: "Developed and implemented new functionality for Digital Commerce Platform on Commerce Cloud.",
       image: "project1",
-      tags: ["React", "Node.js", "MongoDB", "Socket.io"],
+      tags: ["SAP", "Commerce Cloud", "E-commerce"],
       links: {
         demo: "https://demo-url.com",
         code: "https://github.com/yourusername/project1"
       }
     },
     {
-      title: "Project Two",
-      description: "An e-commerce platform with advanced filtering, search, and payment integration to provide seamless shopping experience.",
+      title: "Architecture Blueprint Design",
+      description: "Created architectural overview, decisions, data flow diagrams for e-commerce solutions.",
       image: "project2",
-      tags: ["Next.js", "Stripe", "PostgreSQL", "Tailwind CSS"],
+      tags: ["Architecture", "Design", "E-commerce"],
       links: {
         demo: "https://demo-url.com",
         code: "https://github.com/yourusername/project2"
       }
     },
     {
-      title: "Project Three",
-      description: "A data visualization dashboard that transforms complex datasets into interactive and insightful visual representations.",
+      title: "Continuous Integration Pipeline",
+      description: "Implemented continuous delivery using Git, Maven, and Jenkins for SAP Commerce Cloud.",
       image: "project3",
-      tags: ["D3.js", "TypeScript", "Express", "Redux"],
+      tags: ["CI/CD", "Git", "Jenkins"],
       links: {
         demo: "https://demo-url.com",
         code: "https://github.com/yourusername/project3"
       }
     }
   ];
+
+  // Use resume data projects if available, otherwise use default projects
+  const projects: Project[] = resumeData?.projects && resumeData.projects.length > 0 
+    ? resumeData.projects 
+    : defaultProjects;
 
   return (
     <section id="projects" className="py-24 bg-white">
