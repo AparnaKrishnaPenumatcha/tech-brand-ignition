@@ -50,6 +50,10 @@ const ResumeUploader: React.FC = () => {
         const res = await fetch('http://localhost:8000/parse-resume', {
           method: 'POST',
           body: formData,
+          mode: 'cors', // Try with standard CORS mode first
+          headers: {
+            'Accept': 'application/json',
+          },
         });
         
         if (res.ok) {
@@ -104,7 +108,23 @@ const ResumeUploader: React.FC = () => {
           throw new Error(`Server responded with status: ${res.status}`);
         }
       } catch (backendError) {
-        console.error("Backend service unavailable, using fallback data:", backendError);
+        console.error("Backend service unavailable or CORS issue, using fallback data:", backendError);
+        
+        // If first attempt fails with CORS error, try with no-cors mode
+        // Note: This will make the response opaque and not directly parsable
+        try {
+          await fetch('http://localhost:8000/parse-resume', {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors',
+          });
+          
+          // We can't access the response content with no-cors,
+          // so we'll use the fallback data
+          console.log("Made request with no-cors mode, using fallback data");
+        } catch (noCorsError) {
+          console.error("Even no-cors request failed:", noCorsError);
+        }
         
         // Fallback data with sections identified in the prompt
         resumeData = {
