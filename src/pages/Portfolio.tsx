@@ -9,55 +9,7 @@ import Projects from '@/components/Projects';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import { toast } from '@/hooks/use-toast';
-
-interface ResumeData {
-  fileName: string;
-  fileData: string | ArrayBuffer | null;
-  uploadDate: string;
-  personalInfo: {
-    name: string;
-    title: string;
-    email: string;
-    phone: string;
-    location: string;
-    about: string;
-  };
-  education: Array<{
-    degree: string;
-    institution: string;
-    year: string;
-  }>;
-  experience: {
-    years: string;
-    description: string;
-    positions?: Array<{
-      title: string;
-      company: string;
-      duration: string;
-      description: string;
-    }>;
-  };
-  skills: Array<{
-    name: string;
-    level: number;
-    category: string;
-  }>;
-  projects?: Array<{
-    title: string;
-    description: string;
-    tags: string[];
-    links?: {
-      demo?: string;
-      code?: string;
-    };
-  }>;
-  certifications?: Array<{
-    name: string;
-    issuer: string;
-    year: string;
-  }>;
-  summary?: string;
-}
+import { ResumeData } from '@/utils/resumeProcessing';
 
 const Portfolio: React.FC = () => {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
