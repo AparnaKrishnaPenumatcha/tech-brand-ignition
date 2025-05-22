@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { processResumeFile } from '@/utils/resumeApiClient';
-import { validatePdfFile } from '@/utils/fileValidation';
+import { validateResumeFile } from '@/utils/fileValidation';
 
 export function useResumeUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,12 +13,13 @@ export function useResumeUpload() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type === 'application/pdf') {
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (validTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
       } else {
         toast({
           title: "Invalid file format",
-          description: "Please upload a PDF resume",
+          description: "Please upload a PDF or DOCX resume",
           variant: "destructive",
         });
       }
@@ -26,7 +27,7 @@ export function useResumeUpload() {
   };
 
   const handleUpload = async () => {
-    if (!validatePdfFile(file)) {
+    if (!validateResumeFile(file)) {
       return;
     }
 
