@@ -16,22 +16,18 @@ export interface ResumeData {
     institution: string;
     year: string;
   }>;
-  experience: {
-    years: string;
+  experience: Array<{
+    title: string;
+    company: string;
+    duration: string;
     description: string;
-    positions?: Array<{
-      title: string;
-      company: string;
-      duration: string;
-      description: string;
-    }>;
-  };
+  }>;
   skills: Array<{
     name: string;
     level: number;
     category: string;
   }>;
-  projects?: Array<{
+  projects: Array<{
     title: string;
     description: string;
     tags: string[];
@@ -40,7 +36,7 @@ export interface ResumeData {
       code?: string;
     };
   }>;
-  certifications?: Array<{
+  certifications: Array<{
     name: string;
     issuer: string;
     year: string;
@@ -78,23 +74,12 @@ export const processSkills = (skills: string[]) => {
 
 // Function to process experience data
 export const processExperience = (experienceArray: any[]) => {
-  // Extract years of experience from summary if available
-  let years = "5+"; // Default
-  const yearMatch = /(\d+)\+?\s+years?/i.exec(experienceArray?.[0]?.duration || "");
-  if (yearMatch) {
-    years = yearMatch[1] + "+";
-  }
-
-  return {
-    years,
-    description: "Across various industries",
-    positions: experienceArray.map(exp => ({
-      title: exp.role || "Professional",
-      company: exp.company || "Company",
-      duration: exp.duration || "Present",
-      description: exp.responsibilities ? exp.responsibilities.join(" ") : "Professional experience"
-    }))
-  };
+  return experienceArray.map(exp => ({
+    title: exp.role || "Professional",
+    company: exp.company || "Company",
+    duration: exp.duration || "Present",
+    description: exp.responsibilities ? exp.responsibilities.join(" ") : "Professional experience"
+  }));
 };
 
 // Process projects or create placeholder projects

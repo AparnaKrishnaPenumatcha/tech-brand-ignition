@@ -15,7 +15,7 @@ interface Project {
 }
 
 interface ResumeData {
-  projects?: Project[];
+  projects: Project[];
 }
 
 interface ProjectsProps {

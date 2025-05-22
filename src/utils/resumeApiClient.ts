@@ -1,5 +1,6 @@
+
 import { toast } from '@/hooks/use-toast';
-import { ResumeData } from './resumeProcessing';
+import { ResumeData, processSkills, processExperience, processProjects } from './resumeProcessing';
 
 /**
  * Attempts to parse a resume using the backend API
@@ -61,8 +62,6 @@ export async function processResumeFile(file: File): Promise<ResumeData> {
   
   if (jsonData) {
     // Process the JSON data from API to match the required schema
-    const { processSkills, processExperience, processProjects } = await import('./resumeProcessing');
-    
     resumeData = {
       personalInfo: {
         name: jsonData.personal?.name || "Your Name",
@@ -73,19 +72,19 @@ export async function processResumeFile(file: File): Promise<ResumeData> {
         about: jsonData.summary || "Professional with a passion for creating impactful solutions"
       },
       summary: jsonData.summary || "Experienced professional with expertise in web development and project management.",
-      education: jsonData.education?.map((edu: any) => ({
+      education: Array.isArray(jsonData.education) ? jsonData.education.map((edu: any) => ({
         degree: edu.degree || "Degree",
         institution: edu.institution || "Institution",
         year: edu.year || "Year"
-      })) || [
+      })) : [
         {
           degree: "Bachelor's Degree in Computer Science",
           institution: "University Name",
           year: "20XX-20XX"
         }
       ],
-      experience: processExperience(jsonData.experience || []),
-      projects: processProjects(jsonData.projects || []),
+      experience: processExperience(Array.isArray(jsonData.experience) ? jsonData.experience : []),
+      projects: processProjects(Array.isArray(jsonData.projects) ? jsonData.projects : []),
       skills: Array.isArray(jsonData.skills) 
         ? processSkills(jsonData.skills) 
         : [
@@ -95,11 +94,11 @@ export async function processResumeFile(file: File): Promise<ResumeData> {
             { name: "HTML/CSS", level: 85, category: "Frontend" },
             { name: "Node.js", level: 80, category: "Backend" }
           ],
-      certifications: jsonData.certifications?.map((cert: any) => ({
+      certifications: Array.isArray(jsonData.certifications) ? jsonData.certifications.map((cert: any) => ({
         name: cert.name || "Certification",
         issuer: cert.issuer || "Issuer",
         year: cert.year || "Year"
-      })) || [
+      })) : [
         {
           name: "Professional Certification",
           issuer: "Certification Body",
@@ -150,24 +149,20 @@ function getFallbackResumeData() {
         year: "20XX-20XX"
       }
     ],
-    experience: {
-      years: "5+",
-      description: "Across various industries",
-      positions: [
-        {
-          title: "Senior Developer",
-          company: "Tech Company",
-          duration: "2020-Present",
-          description: "Led development of key features and mentored junior team members."
-        },
-        {
-          title: "Developer",
-          company: "Software Agency",
-          duration: "2018-2020",
-          description: "Implemented client solutions using modern web technologies."
-        }
-      ]
-    },
+    experience: [
+      {
+        title: "Senior Developer",
+        company: "Tech Company",
+        duration: "2020-Present",
+        description: "Led development of key features and mentored junior team members."
+      },
+      {
+        title: "Developer",
+        company: "Software Agency",
+        duration: "2018-2020",
+        description: "Implemented client solutions using modern web technologies."
+      }
+    ],
     projects: [
       {
         title: "Project One",

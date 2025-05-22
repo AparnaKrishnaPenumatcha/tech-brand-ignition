@@ -17,10 +17,12 @@ interface ResumeData {
     institution: string;
     year: string;
   }>;
-  experience: {
-    years: string;
+  experience: Array<{
+    title: string;
+    company: string;
+    duration: string;
     description: string;
-  };
+  }>;
 }
 
 interface AboutProps {
@@ -35,10 +37,10 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
     institution: "University Name", 
     year: "20XX-20XX" 
   };
-  const experience = resumeData?.experience || { 
-    years: "X+", 
-    description: "Across various industries" 
-  };
+  
+  // Get years of experience based on the number of positions
+  const experienceYears = resumeData?.experience?.length ? `${resumeData.experience.length}+` : "5+";
+  const experienceDescription = "Across various industries";
 
   const handleResumeDownload = () => {
     if (resumeUrl) {
@@ -84,7 +86,7 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
             </div>
             
             <p className="text-navy-600">
-              With over {experience.years} years of experience in the industry, I've developed a deep understanding of 
+              With over {experienceYears} years of experience in the industry, I've developed a deep understanding of 
               building solutions that balance technical excellence with user-centered design. 
               My approach combines analytical thinking with creative problem-solving to deliver 
               results that exceed expectations.
@@ -107,8 +109,8 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
               <div>
                 <h4 className="text-lg font-semibold text-navy-800">Experience</h4>
                 <p className="text-navy-600 mt-2">
-                  {experience.years} Years Professional Experience<br />
-                  <span className="text-sm text-navy-500">{experience.description}</span>
+                  {experienceYears} Years Professional Experience<br />
+                  <span className="text-sm text-navy-500">{experienceDescription}</span>
                 </p>
               </div>
             </div>
