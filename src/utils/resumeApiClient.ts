@@ -1,4 +1,3 @@
-
 import { toast } from '@/hooks/use-toast';
 import { ResumeData } from './resumeProcessing';
 
@@ -8,8 +7,19 @@ import { ResumeData } from './resumeProcessing';
  * @returns Parsed resume data or null if parsing failed
  */
 export async function parseResumeWithApi(formData: FormData): Promise<any | null> {
+  // Check if we're likely in a development environment
+  const isDevelopmentEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // If we're not in development, show a toast explaining why we're using fallback data
+  if (!isDevelopmentEnvironment) {
+    toast({
+      title: "Using sample data",
+      description: "The resume parser service is only available in local development. Using fallback data instead.",
+    });
+    return null;
+  }
+  
   try {
-    // First try with standard CORS mode
     const res = await fetch('http://localhost:8000/parse-resume', {
       method: 'POST',
       body: formData,
@@ -24,25 +34,12 @@ export async function parseResumeWithApi(formData: FormData): Promise<any | null
     } else {
       throw new Error(`Server responded with status: ${res.status}`);
     }
-  } catch (backendError) {
-    console.error("Backend service unavailable or CORS issue:", backendError);
-    
-    // If first attempt fails, try with no-cors mode
-    try {
-      await fetch('http://localhost:8000/parse-resume', {
-        method: 'POST',
-        body: formData,
-        mode: 'no-cors',
-      });
-      
-      // We can't access the response content with no-cors,
-      // so we'll log that we made the request
-      console.log("Made request with no-cors mode, falling back to default data");
-    } catch (noCorsError) {
-      console.error("Even no-cors request failed:", noCorsError);
-    }
-    
-    // Return null to indicate parsing failed
+  } catch (error) {
+    console.error("Backend service unavailable:", error);
+    toast({
+      title: "Parser unavailable",
+      description: "Resume parser service is not running. Using fallback data instead.",
+    });
     return null;
   }
 }
