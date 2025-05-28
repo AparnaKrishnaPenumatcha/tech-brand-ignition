@@ -1,0 +1,161 @@
+
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, CheckCircle } from 'lucide-react';
+import { ResumeData } from '@/utils/resumeProcessing';
+
+interface BuildProfileProps {
+  resumeData: ResumeData;
+  onBack: () => void;
+}
+
+const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [isComplete, setIsComplete] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Simulate profile generation process
+    const generateProfile = async () => {
+      setIsGenerating(true);
+      
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Create a simple text-based resume file for download
+      const resumeContent = generateResumeContent(resumeData);
+      const blob = new Blob([resumeContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      setDownloadUrl(url);
+      setIsGenerating(false);
+      setIsComplete(true);
+    };
+
+    generateProfile();
+  }, [resumeData]);
+
+  const generateResumeContent = (data: ResumeData): string => {
+    let content = `${data.personalInfo.name}\n`;
+    content += `${data.personalInfo.title}\n`;
+    content += `Email: ${data.personalInfo.email}\n`;
+    content += `Phone: ${data.personalInfo.phone}\n`;
+    content += `Location: ${data.personalInfo.location}\n\n`;
+    
+    if (data.summary) {
+      content += `SUMMARY\n${data.summary}\n\n`;
+    }
+    
+    content += `EXPERIENCE\n`;
+    data.experience.forEach(exp => {
+      if (exp.title !== 'Ignore' && exp.company !== 'Ignore') {
+        content += `${exp.title} at ${exp.company}\n`;
+        content += `${exp.duration}\n`;
+        content += `${exp.description}\n\n`;
+      }
+    });
+    
+    content += `SKILLS\n`;
+    data.skills.forEach(skill => {
+      if (skill.name !== 'Ignore') {
+        content += `• ${skill.name} (${skill.category})\n`;
+      }
+    });
+    
+    content += `\nEDUCATION\n`;
+    data.education.forEach(edu => {
+      if (edu.degree !== 'Ignore' && edu.institution !== 'Ignore') {
+        content += `${edu.degree}\n${edu.institution}\n${edu.year}\n\n`;
+      }
+    });
+    
+    return content;
+  };
+
+  const handleDownload = () => {
+    if (downloadUrl) {
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${resumeData.personalInfo.name.replace(/\s+/g, '_')}_Resume.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-navy-900 mb-2">Building Your Profile</h2>
+        <p className="text-navy-600">
+          We're creating your personalized resume based on the information you provided
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {isComplete ? (
+              <CheckCircle className="w-5 h-5 text-green-500" />
+            ) : (
+              <div className="w-5 h-5 border-2 border-electric-500 border-t-transparent rounded-full animate-spin" />
+            )}
+            Profile Generation
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isGenerating ? (
+            <div className="space-y-4">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div className="bg-electric-500 h-2 rounded-full animate-pulse" style={{ width: '70%' }} />
+              </div>
+              <p className="text-center text-navy-600">
+                Processing your information and generating your resume...
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-100 border border-green-300 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <p className="text-green-700 font-medium">Resume generated successfully!</p>
+                </div>
+                <p className="text-green-600 text-sm mt-1">
+                  Your personalized resume is ready for download.
+                </p>
+              </div>
+              
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={handleDownload}
+                  className="bg-electric-500 hover:bg-electric-600 text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Resume
+                </Button>
+                
+                <Button
+                  onClick={onBack}
+                  variant="outline"
+                >
+                  Make Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {isComplete && (
+        <div className="text-center text-sm text-navy-500">
+          <p>
+            Your resume has been generated as a text file. You can edit it further using your preferred word processor.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BuildProfile;

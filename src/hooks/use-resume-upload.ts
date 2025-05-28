@@ -74,15 +74,70 @@ export function useResumeUpload() {
   };
 
   const handleCompleteData = (completeData: any) => {
-    // Save complete data to localStorage
-    localStorage.setItem('resumeData', JSON.stringify(completeData));
-    
-    toast({
-      title: "Portfolio data completed",
-      description: "Building your portfolio...",
-    });
-    
-    navigate('/portfolio');
+    if (completeData) {
+      // Save complete data to localStorage
+      localStorage.setItem('resumeData', JSON.stringify(completeData));
+      
+      toast({
+        title: "Portfolio data completed",
+        description: "Building your portfolio...",
+      });
+      
+      navigate('/portfolio');
+    } else {
+      // Trigger manual entry form
+      setShowMissingDataForm(true);
+      // Create empty resume data structure for manual entry
+      const emptyResumeData = {
+        personalInfo: {
+          name: "Your Name",
+          title: "Professional Title", 
+          email: "email@example.com",
+          phone: "(123) 456-7890",
+          location: "City, Country",
+          about: "Professional with a passion for creating impactful solutions"
+        },
+        summary: "Experienced professional with expertise in web development and project management.",
+        education: [
+          {
+            degree: "Bachelor's Degree in Computer Science",
+            institution: "University Name",
+            year: "20XX-20XX"
+          }
+        ],
+        experience: [
+          {
+            title: "Senior Developer",
+            company: "Tech Company",
+            duration: "2020-Present",
+            description: "Led development of key features and mentored junior team members."
+          }
+        ],
+        projects: [
+          {
+            title: "Project One",
+            description: "A comprehensive web application built with React and Node.js.",
+            tags: ["React", "Node.js", "MongoDB"]
+          }
+        ],
+        skills: [
+          { name: "JavaScript", level: 90, category: "Frontend" },
+          { name: "TypeScript", level: 85, category: "Frontend" },
+          { name: "React", level: 90, category: "Frontend" }
+        ],
+        certifications: [
+          {
+            name: "Professional Certification",
+            issuer: "Certification Body",
+            year: "2023"
+          }
+        ],
+        fileName: "manual_entry",
+        fileData: null,
+        uploadDate: new Date().toISOString()
+      };
+      setIncompleteResumeData(emptyResumeData);
+    }
   };
 
   return {
