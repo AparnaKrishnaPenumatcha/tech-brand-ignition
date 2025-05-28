@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ResumeData } from '@/utils/resumeProcessing';
 
 interface HybridDataFormProps {
@@ -14,30 +15,31 @@ interface HybridDataFormProps {
 
 const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete }) => {
   const [formData, setFormData] = useState(parsedData);
+  const [ignoredFields, setIgnoredFields] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isDefaultValue = (value: string, defaultValues: string[]) => {
     return defaultValues.some(def => value.includes(def) || def.includes(value));
   };
 
-  const validateAndGetMissingFields = () => {
-    const missing: Record<string, string> = {};
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
     
     // Check personal info
-    if (!formData.personalInfo.name || isDefaultValue(formData.personalInfo.name, ["Your Name"])) {
-      missing['personalInfo.name'] = 'Name is required';
+    if (!formData.personalInfo.name && !ignoredFields['personalInfo.name']) {
+      newErrors['personalInfo.name'] = 'Name is required or check Ignore';
     }
-    if (!formData.personalInfo.email || isDefaultValue(formData.personalInfo.email, ["email@example.com"])) {
-      missing['personalInfo.email'] = 'Email is required';
+    if (!formData.personalInfo.email && !ignoredFields['personalInfo.email']) {
+      newErrors['personalInfo.email'] = 'Email is required or check Ignore';
     }
-    if (!formData.personalInfo.phone || isDefaultValue(formData.personalInfo.phone, ["(123) 456-7890"])) {
-      missing['personalInfo.phone'] = 'Phone is required';
+    if (!formData.personalInfo.phone && !ignoredFields['personalInfo.phone']) {
+      newErrors['personalInfo.phone'] = 'Phone is required or check Ignore';
     }
-    if (!formData.personalInfo.location || isDefaultValue(formData.personalInfo.location, ["City, Country"])) {
-      missing['personalInfo.location'] = 'Location is required';
+    if (!formData.personalInfo.location && !ignoredFields['personalInfo.location']) {
+      newErrors['personalInfo.location'] = 'Location is required or check Ignore';
     }
-    if (!formData.personalInfo.title || isDefaultValue(formData.personalInfo.title, ["Professional Title"])) {
-      missing['personalInfo.title'] = 'Professional title is required';
+    if (!formData.personalInfo.title && !ignoredFields['personalInfo.title']) {
+      newErrors['personalInfo.title'] = 'Professional title is required or check Ignore';
     }
 
     // Check if there's meaningful experience
@@ -46,19 +48,20 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
       !isDefaultValue(exp.title, ["Professional", "Developer"]) &&
       !isDefaultValue(exp.company, ["Company", "Tech Company"])
     );
-    if (!hasValidExperience) {
-      missing['experience'] = 'At least one valid work experience is required';
+    if (!hasValidExperience && !ignoredFields['experience']) {
+      newErrors['experience'] = 'At least one valid work experience is required or check Ignore';
     }
 
     // Check skills
     const validSkills = formData.skills.filter(skill => 
       skill.name && !isDefaultValue(skill.name, ["JavaScript", "TypeScript", "React"])
     );
-    if (validSkills.length < 3) {
-      missing['skills'] = 'At least 3 skills are required';
+    if (validSkills.length < 3 && !ignoredFields['skills']) {
+      newErrors['skills'] = 'At least 3 skills are required or check Ignore';
     }
 
-    return missing;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const updatePersonalInfo = (field: string, value: string) => {
@@ -70,6 +73,15 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
     // Clear error for this field
     const fieldKey = `personalInfo.${field}`;
     if (errors[fieldKey]) {
+      setErrors(prev => ({ ...prev, [fieldKey]: '' }));
+    }
+  };
+
+  const toggleIgnoreField = (fieldKey: string, checked: boolean) => {
+    setIgnoredFields(prev => ({ ...prev, [fieldKey]: checked }));
+    
+    // Clear error for this field if ignored
+    if (checked && errors[fieldKey]) {
       setErrors(prev => ({ ...prev, [fieldKey]: '' }));
     }
   };
@@ -117,25 +129,19 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const missingFields = validateAndGetMissingFields();
-    
-    if (Object.keys(missingFields).length > 0) {
-      setErrors(missingFields);
+    if (!validateForm()) {
       return;
     }
     
     onComplete(formData);
   };
 
-  const missingFields = validateAndGetMissingFields();
-  const canProceed = Object.keys(missingFields).length === 0;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-navy-900">Review & Complete Your Information</h2>
         <p className="text-navy-600 mt-2">
-          We've extracted some information from your resume. Please fill in any missing details or type "Ignore" to skip.
+          Fill in any missing details or check "Ignore" to skip optional fields.
         </p>
       </div>
 
@@ -146,65 +152,120 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Full Name *</Label>
-            <Input
-              value={formData.personalInfo.name}
-              onChange={(e) => updatePersonalInfo('name', e.target.value)}
-              placeholder="Enter your full name or type 'Ignore'"
-              className={errors['personalInfo.name'] ? 'border-red-500' : ''}
-            />
+            <Label>Full Name</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={formData.personalInfo.name}
+                onChange={(e) => updatePersonalInfo('name', e.target.value)}
+                placeholder="Enter your full name"
+                className={errors['personalInfo.name'] ? 'border-red-500' : ''}
+                disabled={ignoredFields['personalInfo.name']}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-name"
+                  checked={ignoredFields['personalInfo.name'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('personalInfo.name', checked as boolean)}
+                />
+                <Label htmlFor="ignore-name" className="text-sm">Ignore</Label>
+              </div>
+            </div>
             {errors['personalInfo.name'] && (
               <p className="text-red-500 text-sm mt-1">{errors['personalInfo.name']}</p>
             )}
           </div>
           
           <div>
-            <Label>Professional Title *</Label>
-            <Input
-              value={formData.personalInfo.title}
-              onChange={(e) => updatePersonalInfo('title', e.target.value)}
-              placeholder="Enter your title or type 'Ignore'"
-              className={errors['personalInfo.title'] ? 'border-red-500' : ''}
-            />
+            <Label>Professional Title</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={formData.personalInfo.title}
+                onChange={(e) => updatePersonalInfo('title', e.target.value)}
+                placeholder="Enter your title"
+                className={errors['personalInfo.title'] ? 'border-red-500' : ''}
+                disabled={ignoredFields['personalInfo.title']}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-title"
+                  checked={ignoredFields['personalInfo.title'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('personalInfo.title', checked as boolean)}
+                />
+                <Label htmlFor="ignore-title" className="text-sm">Ignore</Label>
+              </div>
+            </div>
             {errors['personalInfo.title'] && (
               <p className="text-red-500 text-sm mt-1">{errors['personalInfo.title']}</p>
             )}
           </div>
           
           <div>
-            <Label>Email *</Label>
-            <Input
-              value={formData.personalInfo.email}
-              onChange={(e) => updatePersonalInfo('email', e.target.value)}
-              placeholder="Enter your email or type 'Ignore'"
-              className={errors['personalInfo.email'] ? 'border-red-500' : ''}
-            />
+            <Label>Email</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={formData.personalInfo.email}
+                onChange={(e) => updatePersonalInfo('email', e.target.value)}
+                placeholder="Enter your email"
+                className={errors['personalInfo.email'] ? 'border-red-500' : ''}
+                disabled={ignoredFields['personalInfo.email']}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-email"
+                  checked={ignoredFields['personalInfo.email'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('personalInfo.email', checked as boolean)}
+                />
+                <Label htmlFor="ignore-email" className="text-sm">Ignore</Label>
+              </div>
+            </div>
             {errors['personalInfo.email'] && (
               <p className="text-red-500 text-sm mt-1">{errors['personalInfo.email']}</p>
             )}
           </div>
           
           <div>
-            <Label>Phone *</Label>
-            <Input
-              value={formData.personalInfo.phone}
-              onChange={(e) => updatePersonalInfo('phone', e.target.value)}
-              placeholder="Enter your phone or type 'Ignore'"
-              className={errors['personalInfo.phone'] ? 'border-red-500' : ''}
-            />
+            <Label>Phone</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={formData.personalInfo.phone}
+                onChange={(e) => updatePersonalInfo('phone', e.target.value)}
+                placeholder="Enter your phone"
+                className={errors['personalInfo.phone'] ? 'border-red-500' : ''}
+                disabled={ignoredFields['personalInfo.phone']}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-phone"
+                  checked={ignoredFields['personalInfo.phone'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('personalInfo.phone', checked as boolean)}
+                />
+                <Label htmlFor="ignore-phone" className="text-sm">Ignore</Label>
+              </div>
+            </div>
             {errors['personalInfo.phone'] && (
               <p className="text-red-500 text-sm mt-1">{errors['personalInfo.phone']}</p>
             )}
           </div>
           
           <div className="md:col-span-2">
-            <Label>Location *</Label>
-            <Input
-              value={formData.personalInfo.location}
-              onChange={(e) => updatePersonalInfo('location', e.target.value)}
-              placeholder="Enter your location or type 'Ignore'"
-              className={errors['personalInfo.location'] ? 'border-red-500' : ''}
-            />
+            <Label>Location</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={formData.personalInfo.location}
+                onChange={(e) => updatePersonalInfo('location', e.target.value)}
+                placeholder="Enter your location"
+                className={errors['personalInfo.location'] ? 'border-red-500' : ''}
+                disabled={ignoredFields['personalInfo.location']}
+              />
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-location"
+                  checked={ignoredFields['personalInfo.location'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('personalInfo.location', checked as boolean)}
+                />
+                <Label htmlFor="ignore-location" className="text-sm">Ignore</Label>
+              </div>
+            </div>
             {errors['personalInfo.location'] && (
               <p className="text-red-500 text-sm mt-1">{errors['personalInfo.location']}</p>
             )}
@@ -215,20 +276,32 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
       {/* Experience */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Work Experience *</CardTitle>
-          <Button type="button" onClick={addExperience} variant="outline" size="sm">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Work Experience
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-experience"
+                  checked={ignoredFields['experience'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('experience', checked as boolean)}
+                />
+                <Label htmlFor="ignore-experience" className="text-sm">Ignore</Label>
+              </div>
+            </CardTitle>
+          </div>
+          <Button type="button" onClick={addExperience} variant="outline" size="sm" disabled={ignoredFields['experience']}>
             Add Experience
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {formData.experience.map((exp, index) => (
+          {!ignoredFields['experience'] && formData.experience.map((exp, index) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
               <div>
                 <Label>Job Title</Label>
                 <Input
                   value={exp.title}
                   onChange={(e) => updateExperience(index, 'title', e.target.value)}
-                  placeholder="Enter job title or type 'Ignore'"
+                  placeholder="Enter job title"
                 />
               </div>
               <div>
@@ -236,7 +309,7 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
                 <Input
                   value={exp.company}
                   onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                  placeholder="Enter company name or type 'Ignore'"
+                  placeholder="Enter company name"
                 />
               </div>
               <div>
@@ -267,40 +340,54 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
       {/* Skills */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Skills * (minimum 3)</CardTitle>
-          <Button type="button" onClick={addSkill} variant="outline" size="sm">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Skills
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="ignore-skills"
+                  checked={ignoredFields['skills'] || false}
+                  onCheckedChange={(checked) => toggleIgnoreField('skills', checked as boolean)}
+                />
+                <Label htmlFor="ignore-skills" className="text-sm">Ignore</Label>
+              </div>
+            </CardTitle>
+          </div>
+          <Button type="button" onClick={addSkill} variant="outline" size="sm" disabled={ignoredFields['skills']}>
             Add Skill
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {formData.skills.map((skill, index) => (
-              <div key={index} className="p-4 border rounded-lg space-y-2">
-                <div>
-                  <Label>Skill Name</Label>
-                  <Input
-                    value={skill.name}
-                    onChange={(e) => updateSkill(index, 'name', e.target.value)}
-                    placeholder="Enter skill or type 'Ignore'"
-                  />
+          {!ignoredFields['skills'] && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {formData.skills.map((skill, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-2">
+                  <div>
+                    <Label>Skill Name</Label>
+                    <Input
+                      value={skill.name}
+                      onChange={(e) => updateSkill(index, 'name', e.target.value)}
+                      placeholder="Enter skill"
+                    />
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <select
+                      value={skill.category}
+                      onChange={(e) => updateSkill(index, 'category', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="Frontend">Frontend</option>
+                      <option value="Backend">Backend</option>
+                      <option value="Database">Database</option>
+                      <option value="Tools">Tools</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <Label>Category</Label>
-                  <select
-                    value={skill.category}
-                    onChange={(e) => updateSkill(index, 'category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="Frontend">Frontend</option>
-                    <option value="Backend">Backend</option>
-                    <option value="Database">Database</option>
-                    <option value="Tools">Tools</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           {errors['skills'] && (
             <p className="text-red-500 text-sm mt-2">{errors['skills']}</p>
           )}
@@ -311,16 +398,10 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
         <Button 
           type="submit" 
           size="lg" 
-          className={`${canProceed ? 'bg-electric-500 hover:bg-electric-600' : 'bg-gray-400 cursor-not-allowed'} text-white`}
-          disabled={!canProceed}
+          className="bg-electric-500 hover:bg-electric-600 text-white"
         >
           Build Profile
         </Button>
-        {!canProceed && (
-          <p className="text-sm text-red-600 mt-2">
-            Please fill in all required fields or type "Ignore" to skip
-          </p>
-        )}
       </div>
     </form>
   );

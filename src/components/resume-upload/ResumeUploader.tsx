@@ -6,12 +6,11 @@ import ResumeOptionSelector from './ResumeOptionSelector';
 import FileUpload from './FileUpload';
 import LoadingButton from './LoadingButton';
 import DemoDataProcessor from './DemoDataProcessor';
-import MissingDataForm from './MissingDataForm';
 import HybridDataForm from './HybridDataForm';
 import BuildProfile from './BuildProfile';
 import { useResumeUpload } from '@/hooks/use-resume-upload';
 
-type FlowStep = 'selector' | 'upload' | 'manual' | 'hybrid' | 'missing' | 'build';
+type FlowStep = 'selector' | 'upload' | 'manual' | 'hybrid' | 'build';
 
 const ResumeUploader: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FlowStep>('selector');
@@ -37,22 +36,65 @@ const ResumeUploader: React.FC = () => {
   };
 
   const handleManualSelect = () => {
-    setCurrentStep('manual');
+    // Create empty resume data structure for manual entry
+    const emptyResumeData = {
+      personalInfo: {
+        name: "",
+        title: "",
+        email: "",
+        phone: "",
+        location: "",
+        about: ""
+      },
+      summary: "",
+      education: [
+        {
+          degree: "",
+          institution: "",
+          year: ""
+        }
+      ],
+      experience: [
+        {
+          title: "",
+          company: "",
+          duration: "",
+          description: ""
+        }
+      ],
+      projects: [
+        {
+          title: "",
+          description: "",
+          tags: []
+        }
+      ],
+      skills: [
+        { name: "", level: 80, category: "Other" }
+      ],
+      certifications: [
+        {
+          name: "",
+          issuer: "",
+          year: ""
+        }
+      ],
+      fileName: "manual_entry",
+      fileData: null,
+      uploadDate: new Date().toISOString()
+    };
+    
+    setFinalResumeData(emptyResumeData);
+    setCurrentStep('hybrid');
   };
 
   const handleUploadComplete = async () => {
     await handleUpload();
-    // After upload processing, check if we need hybrid form
-    if (showMissingDataForm && incompleteResumeData) {
+    // After upload processing, show hybrid form with parsed data
+    if (incompleteResumeData) {
+      setFinalResumeData(incompleteResumeData);
       setCurrentStep('hybrid');
-    } else {
-      setCurrentStep('build');
     }
-  };
-
-  const handleManualComplete = (data: any) => {
-    setFinalResumeData(data);
-    setCurrentStep('build');
   };
 
   const handleHybridComplete = (data: any) => {
@@ -65,18 +107,6 @@ const ResumeUploader: React.FC = () => {
     setFile(null);
     setFinalResumeData(null);
   };
-
-  // Handle the existing missing data form flow
-  if (showMissingDataForm && incompleteResumeData && currentStep === 'manual') {
-    return (
-      <div className="w-full max-w-none">
-        <MissingDataForm 
-          incompleteData={incompleteResumeData}
-          onComplete={handleManualComplete}
-        />
-      </div>
-    );
-  }
 
   // Main flow rendering
   switch (currentStep) {
@@ -135,7 +165,7 @@ const ResumeUploader: React.FC = () => {
       return (
         <div className="w-full max-w-none">
           <HybridDataForm 
-            parsedData={incompleteResumeData}
+            parsedData={finalResumeData}
             onComplete={handleHybridComplete}
           />
           <div className="text-center mt-4">
@@ -149,16 +179,11 @@ const ResumeUploader: React.FC = () => {
         </div>
       );
 
-    case 'manual':
-      // This will trigger the existing MissingDataForm through the hook
-      handleCompleteData(null);
-      return null;
-
     case 'build':
       return (
         <div className="w-full max-w-none">
           <BuildProfile 
-            resumeData={finalResumeData || incompleteResumeData}
+            resumeData={finalResumeData}
             onBack={handleBackToSelector}
           />
         </div>
