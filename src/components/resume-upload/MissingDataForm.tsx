@@ -15,8 +15,47 @@ interface MissingDataFormProps {
 const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onComplete }) => {
   const [formData, setFormData] = useState(incompleteData);
 
+  const validateForm = () => {
+    const { personalInfo, experience, education, skills } = formData;
+    
+    // Check required personal info fields
+    if (!personalInfo.name.trim() || personalInfo.name === "Your Name") return false;
+    if (!personalInfo.title.trim() || personalInfo.title === "Professional Title") return false;
+    if (!personalInfo.email.trim() || personalInfo.email === "email@example.com") return false;
+    if (!personalInfo.phone.trim() || personalInfo.phone === "(123) 456-7890") return false;
+    if (!personalInfo.location.trim() || personalInfo.location === "City, Country") return false;
+    
+    // Check that at least one meaningful experience exists
+    const hasValidExperience = experience.some(exp => 
+      exp.title.trim() && exp.company.trim() && 
+      !exp.title.includes("Professional") && 
+      !exp.company.includes("Company")
+    );
+    if (!hasValidExperience) return false;
+    
+    // Check that at least one meaningful education exists
+    const hasValidEducation = education.some(edu => 
+      edu.degree.trim() && edu.institution.trim() && 
+      !edu.degree.includes("Degree") && 
+      !edu.institution.includes("University Name")
+    );
+    if (!hasValidEducation) return false;
+    
+    // Check that at least 3 skills exist with names
+    const validSkills = skills.filter(skill => skill.name.trim());
+    if (validSkills.length < 3) return false;
+    
+    return true;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      alert('Please fill in all required fields before proceeding.');
+      return;
+    }
+    
     onComplete(formData);
   };
 
@@ -78,7 +117,7 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
     }));
   };
 
-  const updateSkill = (index: number, field: string, value: string | number) => {
+  const updateSkill = (index: number, field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       skills: prev.skills.map((skill, i) => 
@@ -86,6 +125,8 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       )
     }));
   };
+
+  const isFormValid = validateForm();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
@@ -99,53 +140,58 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       {/* Personal Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>Personal Information *</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Full Name *</Label>
             <Input
               id="name"
               value={formData.personalInfo.name}
               onChange={(e) => updatePersonalInfo('name', e.target.value)}
               placeholder="Your Name"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="title">Professional Title</Label>
+            <Label htmlFor="title">Professional Title *</Label>
             <Input
               id="title"
               value={formData.personalInfo.title}
               onChange={(e) => updatePersonalInfo('title', e.target.value)}
               placeholder="Software Developer"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"
               value={formData.personalInfo.email}
               onChange={(e) => updatePersonalInfo('email', e.target.value)}
               placeholder="email@example.com"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">Phone *</Label>
             <Input
               id="phone"
               value={formData.personalInfo.phone}
               onChange={(e) => updatePersonalInfo('phone', e.target.value)}
               placeholder="(123) 456-7890"
+              required
             />
           </div>
           <div>
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">Location *</Label>
             <Input
               id="location"
               value={formData.personalInfo.location}
               onChange={(e) => updatePersonalInfo('location', e.target.value)}
               placeholder="City, Country"
+              required
             />
           </div>
           <div className="md:col-span-2">
@@ -164,7 +210,7 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       {/* Experience */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Work Experience</CardTitle>
+          <CardTitle>Work Experience *</CardTitle>
           <Button type="button" onClick={addExperience} variant="outline" size="sm">
             Add Experience
           </Button>
@@ -173,19 +219,21 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
           {formData.experience.map((exp, index) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
               <div>
-                <Label>Job Title</Label>
+                <Label>Job Title *</Label>
                 <Input
                   value={exp.title}
                   onChange={(e) => updateExperience(index, 'title', e.target.value)}
                   placeholder="Software Developer"
+                  required
                 />
               </div>
               <div>
-                <Label>Company</Label>
+                <Label>Company *</Label>
                 <Input
                   value={exp.company}
                   onChange={(e) => updateExperience(index, 'company', e.target.value)}
                   placeholder="Company Name"
+                  required
                 />
               </div>
               <div>
@@ -213,7 +261,7 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       {/* Education */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Education</CardTitle>
+          <CardTitle>Education *</CardTitle>
           <Button type="button" onClick={addEducation} variant="outline" size="sm">
             Add Education
           </Button>
@@ -222,19 +270,21 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
           {formData.education.map((edu, index) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-lg">
               <div>
-                <Label>Degree</Label>
+                <Label>Degree *</Label>
                 <Input
                   value={edu.degree}
                   onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                   placeholder="Bachelor's in Computer Science"
+                  required
                 />
               </div>
               <div>
-                <Label>Institution</Label>
+                <Label>Institution *</Label>
                 <Input
                   value={edu.institution}
                   onChange={(e) => updateEducation(index, 'institution', e.target.value)}
                   placeholder="University Name"
+                  required
                 />
               </div>
               <div>
@@ -253,7 +303,7 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       {/* Skills */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Skills</CardTitle>
+          <CardTitle>Skills * (minimum 3 required)</CardTitle>
           <Button type="button" onClick={addSkill} variant="outline" size="sm">
             Add Skill
           </Button>
@@ -264,11 +314,12 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
               <div key={index} className="p-4 border rounded-lg">
                 <div className="space-y-2">
                   <div>
-                    <Label>Skill Name</Label>
+                    <Label>Skill Name *</Label>
                     <Input
                       value={skill.name}
                       onChange={(e) => updateSkill(index, 'name', e.target.value)}
                       placeholder="JavaScript"
+                      required
                     />
                   </div>
                   <div>
@@ -285,17 +336,6 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <div>
-                    <Label>Level (0-100)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={skill.level}
-                      onChange={(e) => updateSkill(index, 'level', parseInt(e.target.value) || 0)}
-                      placeholder="80"
-                    />
-                  </div>
                 </div>
               </div>
             ))}
@@ -304,9 +344,19 @@ const MissingDataForm: React.FC<MissingDataFormProps> = ({ incompleteData, onCom
       </Card>
 
       <div className="text-center">
-        <Button type="submit" size="lg" className="bg-electric-500 hover:bg-electric-600 text-white">
+        <Button 
+          type="submit" 
+          size="lg" 
+          className={`${isFormValid ? 'bg-electric-500 hover:bg-electric-600' : 'bg-gray-400 cursor-not-allowed'} text-white`}
+          disabled={!isFormValid}
+        >
           Generate Portfolio
         </Button>
+        {!isFormValid && (
+          <p className="text-sm text-red-600 mt-2">
+            Please fill in all required fields (marked with *)
+          </p>
+        )}
       </div>
     </form>
   );
