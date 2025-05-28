@@ -53,25 +53,19 @@ const Skills: React.FC<SkillsProps> = ({ resumeData }) => {
               <Card key={category} className="card-hover">
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-navy-800 mb-4">{category}</h3>
-                  <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
                     {categorySkills.map((skill) => (
-                      <div key={skill.name}>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium text-navy-700">{skill.name}</span>
-                          <span className="text-xs text-navy-500">{skill.level}%</span>
-                        </div>
-                        <div className="w-full bg-navy-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              skill.category === "Frontend" ? "bg-electric-500" :
-                              skill.category === "Backend" ? "bg-teal-600" :
-                              skill.category === "Database" ? "bg-electric-400" :
-                              "bg-electric-600"
-                            }`}
-                            style={{ width: `${skill.level}%` }}
-                          ></div>
-                        </div>
-                      </div>
+                      <span 
+                        key={skill.name}
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          skill.category === "Frontend" ? "bg-electric-100 text-electric-700" :
+                          skill.category === "Backend" ? "bg-teal-100 text-teal-700" :
+                          skill.category === "Database" ? "bg-electric-50 text-electric-600" :
+                          "bg-navy-100 text-navy-700"
+                        }`}
+                      >
+                        {skill.name}
+                      </span>
                     ))}
                   </div>
                 </CardContent>
