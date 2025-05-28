@@ -21,7 +21,7 @@ export async function parseResumeWithApi(formData: FormData): Promise<any | null
   }
   
   try {
-    const res = await fetch('http://localhost:8000/parse-resume', {
+    const res = await fetch('https://apenumat-100xminicapstoneapi.hf.space/parse-resume', {
       method: 'POST',
       body: formData,
       mode: 'cors',
