@@ -5,6 +5,7 @@ import { Info } from 'lucide-react';
 import FileUpload from './FileUpload';
 import LoadingButton from './LoadingButton';
 import DemoDataProcessor from './DemoDataProcessor';
+import MissingDataForm from './MissingDataForm';
 import { useResumeUpload } from '@/hooks/use-resume-upload';
 
 const ResumeUploader: React.FC = () => {
@@ -13,12 +14,26 @@ const ResumeUploader: React.FC = () => {
     setFile, 
     isLoading, 
     setIsLoading,
+    showMissingDataForm,
+    incompleteResumeData,
     handleFileChange, 
-    handleUpload 
+    handleUpload,
+    handleCompleteData
   } = useResumeUpload();
 
   // Check if we're likely in a development environment
   const isDevelopmentEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (showMissingDataForm && incompleteResumeData) {
+    return (
+      <div className="w-full max-w-none">
+        <MissingDataForm 
+          incompleteData={incompleteResumeData}
+          onComplete={handleCompleteData}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

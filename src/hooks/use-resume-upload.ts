@@ -8,6 +8,8 @@ import { validateResumeFile } from '@/utils/fileValidation';
 export function useResumeUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showMissingDataForm, setShowMissingDataForm] = useState<boolean>(false);
+  const [incompleteResumeData, setIncompleteResumeData] = useState<any>(null);
   const navigate = useNavigate();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,16 +39,29 @@ export function useResumeUpload() {
       // Process the file
       const completeResumeData = await processResumeFile(file!);
       
-      // Save to localStorage
-      localStorage.setItem('resumeData', JSON.stringify(completeResumeData));
+      // Check for missing data
+      const { checkMissingData } = await import('@/utils/dataValidation');
+      const missingDataReport = checkMissingData(completeResumeData);
       
-      // Navigate to portfolio page
-      setIsLoading(false);
-      toast({
-        title: "Resume processed successfully",
-        description: "Building your portfolio...",
-      });
-      navigate('/portfolio');
+      if (missingDataReport.hasMissingData) {
+        setIncompleteResumeData(completeResumeData);
+        setShowMissingDataForm(true);
+        setIsLoading(false);
+        
+        toast({
+          title: "Additional information needed",
+          description: `Please provide: ${missingDataReport.missingFields.join(', ')}`,
+        });
+      } else {
+        // Data is complete, proceed to portfolio
+        localStorage.setItem('resumeData', JSON.stringify(completeResumeData));
+        setIsLoading(false);
+        toast({
+          title: "Resume processed successfully",
+          description: "Building your portfolio...",
+        });
+        navigate('/portfolio');
+      }
     } catch (error) {
       setIsLoading(false);
       console.error("Error processing resume:", error);
@@ -58,12 +73,27 @@ export function useResumeUpload() {
     }
   };
 
+  const handleCompleteData = (completeData: any) => {
+    // Save complete data to localStorage
+    localStorage.setItem('resumeData', JSON.stringify(completeData));
+    
+    toast({
+      title: "Portfolio data completed",
+      description: "Building your portfolio...",
+    });
+    
+    navigate('/portfolio');
+  };
+
   return {
     file,
     setFile,
     isLoading,
     setIsLoading,
+    showMissingDataForm,
+    incompleteResumeData,
     handleFileChange,
-    handleUpload
+    handleUpload,
+    handleCompleteData
   };
 }
