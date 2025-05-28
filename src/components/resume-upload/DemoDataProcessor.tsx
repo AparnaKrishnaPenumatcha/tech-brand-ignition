@@ -78,7 +78,7 @@ const DemoDataProcessor: React.FC<DemoDataProcessorProps> = ({ isLoading, setIsL
         experience: processExperience(jsonData.experience || []),
         projects: processProjects(jsonData.projects || []),
         skills: Array.isArray(jsonData.skills) 
-          ? processSkills(jsonData.skills) 
+          ? processSkills(jsonData.skills.map(skill => ({ name: skill }))) 
           : [
               { name: "JavaScript", level: 90, category: "Frontend" },
               { name: "TypeScript", level: 85, category: "Frontend" },
