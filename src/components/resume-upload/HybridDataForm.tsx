@@ -18,11 +18,8 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
   const [ignoredFields, setIgnoredFields] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isDefaultValue = (value: string, defaultValues: string[]) => {
-    return defaultValues.some(def => value.includes(def) || def.includes(value));
-  };
-
   const validateForm = () => {
+    console.log('Validating form...', { formData, ignoredFields });
     const newErrors: Record<string, string> = {};
     
     // Check personal info
@@ -44,22 +41,23 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
 
     // Check if there's meaningful experience
     const hasValidExperience = formData.experience.some(exp => 
-      exp.title && exp.company && 
-      !isDefaultValue(exp.title, ["Professional", "Developer"]) &&
-      !isDefaultValue(exp.company, ["Company", "Tech Company"])
+      exp.title && exp.company && exp.title.trim() !== '' && exp.company.trim() !== ''
     );
     if (!hasValidExperience && !ignoredFields['experience']) {
       newErrors['experience'] = 'At least one valid work experience is required or check Ignore';
     }
 
-    // Check skills
+    // Check skills - count skills with non-empty names
     const validSkills = formData.skills.filter(skill => 
-      skill.name && !isDefaultValue(skill.name, ["JavaScript", "TypeScript", "React"])
+      skill.name && skill.name.trim() !== ''
     );
+    console.log('Valid skills count:', validSkills.length, validSkills);
+    
     if (validSkills.length < 3 && !ignoredFields['skills']) {
       newErrors['skills'] = 'At least 3 skills are required or check Ignore';
     }
 
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -78,6 +76,7 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
   };
 
   const toggleIgnoreField = (fieldKey: string, checked: boolean) => {
+    console.log('Toggling ignore field:', fieldKey, checked);
     setIgnoredFields(prev => ({ ...prev, [fieldKey]: checked }));
     
     // Clear error for this field if ignored
@@ -129,10 +128,13 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted, validating...');
     if (!validateForm()) {
+      console.log('Validation failed, not proceeding');
       return;
     }
     
+    console.log('Validation passed, calling onComplete');
     onComplete(formData);
   };
 
@@ -342,7 +344,7 @@ const HybridDataForm: React.FC<HybridDataFormProps> = ({ parsedData, onComplete 
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              Skills
+              Skills (minimum 3 required)
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="ignore-skills"
