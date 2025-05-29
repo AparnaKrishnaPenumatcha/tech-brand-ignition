@@ -9,16 +9,17 @@ interface ImprovementsCardProps {
   improvements: Improvement[] | any;
 }
 
-const ImprovementsCard: React.FC<ImprovementsCardProps> = React.memo(({ improvements }) => {
-  console.log('🔧 ImprovementsCard raw input:', improvements);
+const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => {
+  console.log('🔧 ImprovementsCard received:', improvements);
   
   const parsedImprovements = useMemo(() => {
     console.log('🔄 Memoizing parseImprovements call');
-    return parseImprovements(improvements);
-  }, [improvements]);
+    const result = parseImprovements(improvements);
+    console.log('📝 Parsed result:', result);
+    return result;
+  }, [JSON.stringify(improvements)]); // Stable dependency
 
-  console.log('📝 ImprovementsCard final parsed data:', parsedImprovements);
-  console.log('📝 Parsed improvements count:', parsedImprovements?.length || 0);
+  console.log('📝 Final parsed improvements count:', parsedImprovements?.length || 0);
 
   if (!parsedImprovements || parsedImprovements.length === 0) {
     console.log('⚠️ No improvements to display');
@@ -83,74 +84,70 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = React.memo(({ improvem
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          {parsedImprovements.map((improvement, index) => {
-            console.log(`📋 Rendering improvement ${index + 1}:`, improvement);
-            
-            return (
-              <div key={`improvement-${index}-${improvement.area || 'unknown'}`} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-                {/* Priority Header */}
-                <div className="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 ${getPriorityColor(index)} text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md`}>
-                        {index + 1}
+          {parsedImprovements.map((improvement, index) => (
+            <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+              {/* Priority Header */}
+              <div className="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 ${getPriorityColor(index)} text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md`}>
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {improvement.area || `Improvement ${index + 1}`}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          index === 0 ? 'bg-red-100 text-red-700' :
+                          index === 1 ? 'bg-orange-100 text-orange-700' :
+                          index === 2 ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {getPriorityLabel(index)} Priority
+                        </span>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {improvement.area || `Improvement ${index + 1}`}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            index === 0 ? 'bg-red-100 text-red-700' :
-                            index === 1 ? 'bg-orange-100 text-orange-700' :
-                            index === 2 ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {getPriorityLabel(index)} Priority
-                          </span>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 space-y-5">
+                {/* Suggestion */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1 bg-blue-100 rounded">
+                      <Lightbulb className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <h4 className="font-semibold text-gray-800">Recommendation</h4>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                    <div className="text-gray-700 leading-relaxed">
+                      {renderMarkdownText(improvement.suggestion || 'No specific suggestion provided')}
                     </div>
                   </div>
                 </div>
                 
-                {/* Content */}
-                <div className="p-6 space-y-5">
-                  {/* Suggestion */}
+                {/* Impact */}
+                {improvement.impact && (
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="p-1 bg-blue-100 rounded">
-                        <Lightbulb className="w-4 h-4 text-blue-600" />
+                      <div className="p-1 bg-green-100 rounded">
+                        <Target className="w-4 h-4 text-green-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-800">Recommendation</h4>
+                      <h4 className="font-semibold text-gray-800">Expected Impact</h4>
                     </div>
-                    <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
+                    <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
                       <div className="text-gray-700 leading-relaxed">
-                        {renderMarkdownText(improvement.suggestion || 'No specific suggestion provided')}
+                        {renderMarkdownText(improvement.impact)}
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Impact */}
-                  {improvement.impact && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="p-1 bg-green-100 rounded">
-                          <Target className="w-4 h-4 text-green-600" />
-                        </div>
-                        <h4 className="font-semibold text-gray-800">Expected Impact</h4>
-                      </div>
-                      <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
-                        <div className="text-gray-700 leading-relaxed">
-                          {renderMarkdownText(improvement.impact)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
         
         {/* Action Guidance */}
@@ -171,8 +168,6 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = React.memo(({ improvem
       </CardContent>
     </Card>
   );
-});
-
-ImprovementsCard.displayName = 'ImprovementsCard';
+};
 
 export default ImprovementsCard;
