@@ -46,13 +46,26 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
       }
 
       const result = await optimizeResume(resumeData, targetRole);
-      setAnalysis(result);
+      console.log('Raw analysis result:', result);
+      
+      // Parse the result if it's a string
+      let parsedResult = result;
+      if (typeof result === 'string') {
+        try {
+          parsedResult = JSON.parse(result);
+        } catch (e) {
+          console.error('Failed to parse result as JSON:', e);
+        }
+      }
+      
+      setAnalysis(parsedResult);
       
       toast({
         title: "Analysis complete!",
         description: "Your resume optimization report is ready.",
       });
     } catch (error) {
+      console.error('Optimization error:', error);
       toast({
         title: "Analysis failed",
         description: "Failed to analyze resume. Please try again.",
@@ -70,6 +83,40 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
   const getScoreIcon = (score: number) => {
     if (score >= 80) return <CheckCircle className="w-5 h-5 text-green-600" />;
     return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+  };
+
+  const renderMarkdownText = (text: string) => {
+    if (!text) return text;
+    
+    // Replace **text** with bold formatting
+    const boldFormatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Replace line breaks
+    const withLineBreaks = boldFormatted.replace(/\n/g, '<br />');
+    
+    return <span dangerouslySetInnerHTML={{ __html: withLineBreaks }} />;
+  };
+
+  const parseImprovements = (improvements: any) => {
+    // If improvements is already an array, return it
+    if (Array.isArray(improvements)) {
+      return improvements;
+    }
+    
+    // If it's a string that looks like JSON, try to parse it
+    if (typeof improvements === 'string') {
+      try {
+        const parsed = JSON.parse(improvements);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Failed to parse improvements JSON:', e);
+      }
+    }
+    
+    // Fallback: return empty array
+    return [];
   };
 
   return (
@@ -130,7 +177,9 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">{analysis.summary}</p>
+                <div className="text-gray-600">
+                  {renderMarkdownText(analysis.summary)}
+                </div>
               </CardContent>
             </Card>
 
@@ -144,7 +193,9 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
                   {analysis.strengths.map((strength, index) => (
                     <li key={index} className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm">{strength}</span>
+                      <div className="text-sm">
+                        {renderMarkdownText(strength)}
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -158,13 +209,19 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analysis.improvements.map((improvement, index) => (
+                  {parseImprovements(analysis.improvements).map((improvement, index) => (
                     <div key={index} className="border-l-4 border-orange-200 pl-4">
-                      <h4 className="font-medium text-orange-800">{improvement.area}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{improvement.suggestion}</p>
-                      <p className="text-xs text-green-600 mt-1">
-                        <strong>Expected Impact:</strong> {improvement.impact}
-                      </p>
+                      <h4 className="font-medium text-orange-800">
+                        {improvement.area || `Improvement ${index + 1}`}
+                      </h4>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {renderMarkdownText(improvement.suggestion || improvement)}
+                      </div>
+                      {improvement.impact && (
+                        <div className="text-xs text-green-600 mt-1">
+                          <strong>Expected Impact:</strong> {renderMarkdownText(improvement.impact)}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -172,7 +229,7 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
             </Card>
 
             {/* Keywords Card */}
-            {analysis.keywordsToAdd.length > 0 && (
+            {analysis.keywordsToAdd && analysis.keywordsToAdd.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-blue-600">🔍 Recommended Keywords</CardTitle>
@@ -189,7 +246,7 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
                     ))}
                   </div>
                 </CardContent>
-              </Card>
+            </Card>
             )}
           </div>
         )}
