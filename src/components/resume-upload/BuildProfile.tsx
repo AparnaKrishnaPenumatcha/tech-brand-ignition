@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,17 +17,18 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate profile generation process
     const generateProfile = async () => {
       setIsGenerating(true);
       
-      // Save to localStorage first
+      console.log('Saving resume data to localStorage:', resumeData);
+      
+      // Save to localStorage
       localStorage.setItem('resumeData', JSON.stringify(resumeData));
       
       // Simulate processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create a simple text-based resume file for download
+      // Create a resume file for download
       const resumeContent = generateResumeContent(resumeData);
       const blob = new Blob([resumeContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
@@ -35,8 +37,10 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       setIsGenerating(false);
       setIsComplete(true);
       
-      // Trigger a custom event to notify other components that resume data has been updated
+      // Trigger update event for other components
       window.dispatchEvent(new CustomEvent('resumeDataUpdated'));
+      
+      console.log('Profile generation complete, data saved to localStorage');
     };
 
     generateProfile();
@@ -46,35 +50,43 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
     let content = `${data.personalInfo.name}\n`;
     content += `${data.personalInfo.title}\n`;
     content += `Email: ${data.personalInfo.email}\n`;
-    content += `Phone: ${data.personalInfo.phone}\n`;
-    content += `Location: ${data.personalInfo.location}\n\n`;
+    if (data.personalInfo.phone) content += `Phone: ${data.personalInfo.phone}\n`;
+    if (data.personalInfo.location) content += `Location: ${data.personalInfo.location}\n\n`;
     
     if (data.summary) {
       content += `SUMMARY\n${data.summary}\n\n`;
     }
     
-    content += `EXPERIENCE\n`;
-    data.experience.forEach(exp => {
-      if (exp.title !== 'Ignore' && exp.company !== 'Ignore') {
+    if (data.experience?.length) {
+      content += `EXPERIENCE\n`;
+      data.experience.forEach(exp => {
         content += `${exp.title} at ${exp.company}\n`;
         content += `${exp.duration}\n`;
         content += `${exp.description}\n\n`;
-      }
-    });
+      });
+    }
     
-    content += `SKILLS\n`;
-    data.skills.forEach(skill => {
-      if (skill.name !== 'Ignore') {
+    if (data.skills?.length) {
+      content += `SKILLS\n`;
+      data.skills.forEach(skill => {
         content += `• ${skill.name} (${skill.category})\n`;
-      }
-    });
+      });
+      content += '\n';
+    }
     
-    content += `\nEDUCATION\n`;
-    data.education.forEach(edu => {
-      if (edu.degree !== 'Ignore' && edu.institution !== 'Ignore') {
+    if (data.education?.length) {
+      content += `EDUCATION\n`;
+      data.education.forEach(edu => {
         content += `${edu.degree}\n${edu.institution}\n${edu.year}\n\n`;
-      }
-    });
+      });
+    }
+    
+    if (data.certifications?.length) {
+      content += `CERTIFICATIONS\n`;
+      data.certifications.forEach(cert => {
+        content += `${cert.name} - ${cert.issuer} (${cert.year})\n`;
+      });
+    }
     
     return content;
   };
@@ -95,7 +107,7 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-navy-900 mb-2">Building Your Profile</h2>
         <p className="text-navy-600">
-          We're creating your personalized resume based on the information you provided
+          We're creating your personalized resume and portfolio based on the information you provided
         </p>
       </div>
 
@@ -117,7 +129,7 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
                 <div className="bg-electric-500 h-2 rounded-full animate-pulse" style={{ width: '70%' }} />
               </div>
               <p className="text-center text-navy-600">
-                Processing your information and generating your resume...
+                Processing your information and generating your portfolio...
               </p>
             </div>
           ) : (
@@ -125,10 +137,10 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
               <div className="bg-green-100 border border-green-300 rounded-lg p-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <p className="text-green-700 font-medium">Resume generated successfully!</p>
+                  <p className="text-green-700 font-medium">Portfolio generated successfully!</p>
                 </div>
                 <p className="text-green-600 text-sm mt-1">
-                  Your personalized resume is ready for download and your portfolio has been updated.
+                  Your personalized resume is ready for download and your portfolio landing page has been updated.
                 </p>
               </div>
               
@@ -163,7 +175,8 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       {isComplete && (
         <div className="text-center text-sm text-navy-500">
           <p>
-            Your resume has been generated and your portfolio landing page has been updated with your information.
+            Your portfolio has been generated and your landing page has been updated with your information.
+            You can now view your complete portfolio or download your resume.
           </p>
         </div>
       )}

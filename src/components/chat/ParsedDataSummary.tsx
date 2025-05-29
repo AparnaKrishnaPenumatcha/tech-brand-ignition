@@ -2,8 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Check, User, Briefcase, GraduationCap, Award } from 'lucide-react';
+import { CheckCircle, Edit, User, Briefcase, GraduationCap, Award } from 'lucide-react';
 import { ResumeData } from '@/utils/resumeProcessing';
 
 interface ParsedDataSummaryProps {
@@ -17,191 +16,160 @@ const ParsedDataSummary: React.FC<ParsedDataSummaryProps> = ({
   onEditRequest,
   onAcceptAll
 }) => {
-  const renderPersonalInfo = () => {
-    if (!data.personalInfo) return null;
-    
-    const { name, title, email, phone, location } = data.personalInfo;
-    const fields = [
-      { label: 'Name', value: name, field: 'personalInfo.name' },
-      { label: 'Title', value: title, field: 'personalInfo.title' },
-      { label: 'Email', value: email, field: 'personalInfo.email' },
-      { label: 'Phone', value: phone, field: 'personalInfo.phone' },
-      { label: 'Location', value: location, field: 'personalInfo.location' }
-    ].filter(item => item.value);
-
-    if (!fields.length) return null;
-
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="w-5 h-5 text-electric-500" />
-            Personal Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {fields.map((field, index) => (
-            <div key={index} className="flex justify-between items-center py-1">
-              <span className="font-medium text-navy-700">{field.label}:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-navy-600">{field.value}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onEditRequest([field.field])}
-                  className="h-6 w-6 p-0"
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderExperience = () => {
-    if (!data.experience?.length) return null;
-
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Briefcase className="w-5 h-5 text-electric-500" />
-            Work Experience
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {data.experience.map((exp, index) => (
-            <div key={index} className="border-l-2 border-electric-200 pl-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-semibold text-navy-900">{exp.title}</h4>
-                  <p className="text-navy-700">{exp.company}</p>
-                  <p className="text-sm text-navy-500">{exp.duration}</p>
-                  {exp.description && (
-                    <p className="text-sm text-navy-600 mt-1">{exp.description}</p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onEditRequest([`experience.${index}`])}
-                  className="h-6 w-6 p-0"
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderEducation = () => {
-    if (!data.education?.length) return null;
-
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <GraduationCap className="w-5 h-5 text-electric-500" />
-            Education
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {data.education.map((edu, index) => (
-            <div key={index} className="flex justify-between items-center">
-              <div>
-                <p className="font-medium text-navy-900">{edu.degree}</p>
-                <p className="text-navy-700">{edu.institution}</p>
-                <p className="text-sm text-navy-500">{edu.year}</p>
-              </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onEditRequest([`education.${index}`])}
-                className="h-6 w-6 p-0"
-              >
-                <Edit className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderSkills = () => {
-    if (!data.skills?.length) return null;
-
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Award className="w-5 h-5 text-electric-500" />
-            Skills
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {data.skills.map((skill, index) => (
-              <Badge key={index} variant="secondary" className="bg-electric-100 text-electric-700">
-                {skill.name}
-              </Badge>
-            ))}
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onEditRequest(['skills'])}
-            className="mt-2 h-6 text-xs"
-          >
-            <Edit className="w-3 h-3 mr-1" />
-            Edit Skills
-          </Button>
-        </CardContent>
-      </Card>
-    );
+  const handleEditSection = (section: string) => {
+    onEditRequest([section]);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-xl font-semibold text-navy-900 mb-2">
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-500" />
           Resume Analysis Complete
-        </h3>
-        <p className="text-navy-600 mb-4">
-          Here's what I found in your resume. You can edit any field or proceed if everything looks good.
+        </CardTitle>
+        <p className="text-sm text-navy-600">
+          Here's what I found in your resume. You can edit any section or accept all the information.
         </p>
-      </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Personal Information */}
+        <div className="border rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-navy-500" />
+              <h3 className="font-medium">Personal Information</h3>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEditSection('personalInfo')}
+            >
+              <Edit className="w-3 h-3 mr-1" />
+              Edit
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <div><strong>Name:</strong> {data.personalInfo?.name || 'Not found'}</div>
+            <div><strong>Title:</strong> {data.personalInfo?.title || 'Not found'}</div>
+            <div><strong>Email:</strong> {data.personalInfo?.email || 'Not found'}</div>
+            <div><strong>Phone:</strong> {data.personalInfo?.phone || 'Not found'}</div>
+            <div className="md:col-span-2"><strong>Location:</strong> {data.personalInfo?.location || 'Not found'}</div>
+          </div>
+        </div>
 
-      <div className="grid gap-4">
-        {renderPersonalInfo()}
-        {renderExperience()}
-        {renderEducation()}
-        {renderSkills()}
-      </div>
+        {/* Experience */}
+        {data.experience && data.experience.length > 0 && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-navy-500" />
+                <h3 className="font-medium">Work Experience ({data.experience.length} entries)</h3>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEditSection('experience')}
+              >
+                <Edit className="w-3 h-3 mr-1" />
+                Edit
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {data.experience.slice(0, 2).map((exp, index) => (
+                <div key={index} className="text-sm">
+                  <div><strong>{exp.title}</strong> at {exp.company}</div>
+                  <div className="text-navy-600">{exp.duration}</div>
+                </div>
+              ))}
+              {data.experience.length > 2 && (
+                <div className="text-sm text-navy-500">
+                  +{data.experience.length - 2} more entries
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-      <div className="flex gap-3 justify-center pt-4">
-        <Button
-          onClick={onAcceptAll}
-          className="bg-electric-500 hover:bg-electric-600"
-        >
-          <Check className="w-4 h-4 mr-2" />
-          Looks Good - Continue
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => onEditRequest([])}
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          I Want to Edit Some Fields
-        </Button>
-      </div>
-    </div>
+        {/* Education */}
+        {data.education && data.education.length > 0 && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-navy-500" />
+                <h3 className="font-medium">Education ({data.education.length} entries)</h3>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEditSection('education')}
+              >
+                <Edit className="w-3 h-3 mr-1" />
+                Edit
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {data.education.slice(0, 2).map((edu, index) => (
+                <div key={index} className="text-sm">
+                  <div><strong>{edu.degree}</strong></div>
+                  <div className="text-navy-600">{edu.institution} - {edu.year}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Skills */}
+        {data.skills && data.skills.length > 0 && (
+          <div className="border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-navy-500" />
+                <h3 className="font-medium">Skills ({data.skills.length} skills)</h3>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEditSection('skills')}
+              >
+                <Edit className="w-3 h-3 mr-1" />
+                Edit
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {data.skills.slice(0, 8).map((skill, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-navy-100 text-navy-700 rounded text-xs"
+                >
+                  {skill.name}
+                </span>
+              ))}
+              {data.skills.length > 8 && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                  +{data.skills.length - 8} more
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-4">
+          <Button
+            onClick={onAcceptAll}
+            className="flex-1 bg-electric-500 hover:bg-electric-600 text-white"
+          >
+            Looks Good - Continue
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onEditRequest(['personalInfo', 'experience', 'education', 'skills'])}
+          >
+            Edit All Sections
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
