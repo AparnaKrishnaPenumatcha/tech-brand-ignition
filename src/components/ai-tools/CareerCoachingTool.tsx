@@ -8,6 +8,7 @@ import { useAITools } from '@/hooks/useAITools';
 import { ResumeData } from '@/utils/resumeProcessing';
 import { ArrowLeft, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { renderMarkdownText } from './utils/markdownUtils';
 
 interface CareerCoachingToolProps {
   onBack: () => void;
@@ -121,8 +122,14 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
               <CardTitle>Your Personalized Career Roadmap</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg">
-                {coaching}
+              <div className="prose prose-gray max-w-none">
+                <div className="text-sm leading-relaxed space-y-4 bg-gray-50 p-6 rounded-lg border">
+                  {coaching.split('\n\n').map((section, index) => (
+                    <div key={index} className="space-y-2">
+                      {renderMarkdownText(section)}
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
