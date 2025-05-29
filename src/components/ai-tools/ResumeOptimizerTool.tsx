@@ -8,10 +8,7 @@ import { ResumeData } from '@/utils/resumeProcessing';
 import { ArrowLeft, Target, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AnalysisResult } from './types/resumeAnalysis';
-import ScoreCard from './components/ScoreCard';
-import StrengthsCard from './components/StrengthsCard';
-import ImprovementsCard from './components/ImprovementsCard';
-import KeywordsCard from './components/KeywordsCard';
+import ResumeFeedback from './components/ResumeFeedback';
 
 interface ResumeOptimizerToolProps {
   onBack: () => void;
@@ -188,16 +185,7 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
                 <CheckCircle2 className="w-6 h-6 text-green-500" />
                 Analysis Results
               </h2>
-              <div className="space-y-6">
-                <ScoreCard score={analysis.overallScore} summary={analysis.summary} />
-                {analysis.strengths && analysis.strengths.length > 0 && (
-                  <StrengthsCard strengths={analysis.strengths} />
-                )}
-                <ImprovementsCard improvements={analysis.improvements} />
-                {analysis.keywordsToAdd && analysis.keywordsToAdd.length > 0 && (
-                  <KeywordsCard keywords={analysis.keywordsToAdd} />
-                )}
-              </div>
+              <ResumeFeedback feedback={analysis} />
             </div>
           </div>
         )}
