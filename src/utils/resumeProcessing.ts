@@ -1,4 +1,3 @@
-
 export interface ResumeData {
   fileName: string;
   fileData: string | ArrayBuffer | null;
@@ -111,4 +110,76 @@ export const processProjects = (projectsArray: any[]) => {
     ];
   }
   return projectsArray;
+};
+
+// Mock function to simulate resume file processing
+// In a real implementation, this would parse PDF/DOCX files
+export const processResumeFile = async (file: File): Promise<ResumeData> => {
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Mock parsed data - in a real implementation, this would parse the actual file
+  const mockParsedData: ResumeData = {
+    fileName: file.name,
+    fileData: null,
+    uploadDate: new Date().toISOString(),
+    personalInfo: {
+      name: "John Doe",
+      title: "Software Engineer",
+      email: "john.doe@email.com",
+      phone: "+1 (555) 123-4567",
+      location: "San Francisco, CA",
+      about: "Passionate software engineer with expertise in full-stack development"
+    },
+    summary: "Experienced software engineer with 5+ years in developing scalable web applications and leading cross-functional teams.",
+    education: [
+      {
+        degree: "Bachelor of Science in Computer Science",
+        institution: "University of California, Berkeley",
+        year: "2018"
+      }
+    ],
+    experience: [
+      {
+        title: "Senior Software Engineer",
+        company: "Tech Corp",
+        duration: "2022 - Present",
+        description: "Led development of microservices architecture serving 1M+ users daily"
+      },
+      {
+        title: "Software Engineer",
+        company: "StartupXYZ",
+        duration: "2019 - 2022",
+        description: "Developed and maintained full-stack applications using React and Node.js"
+      }
+    ],
+    skills: processSkills([
+      { name: "JavaScript" },
+      { name: "React" },
+      { name: "Node.js" },
+      { name: "Python" },
+      { name: "SQL" },
+      { name: "Git" }
+    ]),
+    projects: [
+      {
+        title: "E-commerce Platform",
+        description: "Built a full-stack e-commerce solution with React and Node.js",
+        tags: ["React", "Node.js", "MongoDB"],
+        links: {
+          demo: "https://demo.example.com",
+          code: "https://github.com/example/project"
+        }
+      }
+    ],
+    certifications: [
+      {
+        name: "AWS Certified Developer",
+        issuer: "Amazon Web Services",
+        year: "2023"
+      }
+    ]
+  };
+  
+  return mockParsedData;
 };
