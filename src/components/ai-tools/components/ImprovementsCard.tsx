@@ -10,10 +10,15 @@ interface ImprovementsCardProps {
 }
 
 const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => {
-  console.log('🔧 ImprovementsCard rendering with:', improvements);
+  console.log('🔧 ImprovementsCard raw input:', improvements);
   
   const parsedImprovements = parseImprovements(improvements);
-  console.log('📝 Parsed improvements:', parsedImprovements);
+  console.log('📝 ImprovementsCard final parsed data:', parsedImprovements);
+
+  if (!parsedImprovements || parsedImprovements.length === 0) {
+    console.log('⚠️ No improvements to display');
+    return null;
+  }
 
   const getPriorityColor = (index: number) => {
     if (index === 0) return 'bg-red-500';
@@ -47,7 +52,7 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 rounded-full">
             <AlertTriangle className="w-4 h-4 text-orange-600" />
             <span className="text-sm font-medium text-orange-700">
-              {parsedImprovements.length} Issues Found
+              {parsedImprovements.length} Areas to Improve
             </span>
           </div>
         </CardTitle>
@@ -56,7 +61,7 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
         <div className="space-y-6">
           {parsedImprovements.map((improvement, index) => (
             <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-              {/* Area Header */}
+              {/* Priority Header */}
               <div className="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -65,7 +70,7 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800">
-                        {improvement.area || `Area ${index + 1}`}
+                        {improvement.area || `Improvement ${index + 1}`}
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -94,7 +99,7 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
                   </div>
                   <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
                     <div className="text-gray-700 leading-relaxed">
-                      {renderMarkdownText(improvement.suggestion || improvement)}
+                      {renderMarkdownText(improvement.suggestion || 'No specific suggestion provided')}
                     </div>
                   </div>
                 </div>
@@ -118,6 +123,22 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
               </div>
             </div>
           ))}
+        </div>
+        
+        {/* Action Guidance */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+          <div className="flex items-start gap-3">
+            <div className="p-1 bg-orange-100 rounded">
+              <Target className="w-4 h-4 text-orange-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-orange-800 mb-1">Next Steps</h4>
+              <p className="text-sm text-orange-700 leading-relaxed">
+                Address these improvements in priority order. Start with critical items first, 
+                as they will have the most significant impact on your resume's effectiveness.
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
