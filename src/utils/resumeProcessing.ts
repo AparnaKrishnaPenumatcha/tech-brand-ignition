@@ -53,7 +53,7 @@ export interface ResumeData {
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Extract text content from PDF files
+// Enhanced PDF text extraction
 const extractTextFromPDF = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -62,58 +62,29 @@ const extractTextFromPDF = async (file: File): Promise<string> => {
         const arrayBuffer = reader.result as ArrayBuffer;
         const uint8Array = new Uint8Array(arrayBuffer);
         
-        // Basic PDF text extraction
-        // This is a simplified approach - for better results, consider using a PDF parsing library
-        let text = '';
-        let inTextObject = false;
-        let buffer = '';
+        console.log('=== Enhanced PDF Processing ===');
+        console.log('File size:', uint8Array.length, 'bytes');
         
-        for (let i = 0; i < uint8Array.length - 1; i++) {
-          const char = String.fromCharCode(uint8Array[i]);
-          
-          // Look for text objects in PDF
-          if (char === 'B' && String.fromCharCode(uint8Array[i + 1]) === 'T') {
-            inTextObject = true;
-            continue;
-          }
-          
-          if (char === 'E' && String.fromCharCode(uint8Array[i + 1]) === 'T') {
-            inTextObject = false;
-            continue;
-          }
-          
-          if (inTextObject && char.match(/[a-zA-Z0-9\s@.\-()]/)) {
-            buffer += char;
-          } else if (buffer.length > 0) {
-            text += buffer + ' ';
-            buffer = '';
-          }
+        // Convert to base64 for sending to edge function
+        let binary = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
         }
+        const base64String = btoa(binary);
+        const dataUrl = `data:application/pdf;base64,${base64String}`;
         
-        // Clean up the extracted text
-        text = text.replace(/\s+/g, ' ').trim();
+        console.log('=== PDF converted to base64 ===');
+        console.log('Base64 length:', base64String.length);
         
-        if (text.length < 50) {
-          // If extraction failed, try a different approach
-          const decoder = new TextDecoder('utf-8', { fatal: false });
-          const rawText = decoder.decode(uint8Array);
-          const cleanText = rawText.replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
-          text = cleanText.length > text.length ? cleanText : text;
-        }
-        
-        console.log('=== PDF Text Extraction: Success ===');
-        console.log('Extracted text preview:', text.substring(0, 300) + '...');
-        console.log('Total text length:', text.length);
-        
-        resolve(text);
+        resolve(dataUrl);
       } catch (error) {
-        console.error('=== PDF Text Extraction: Error ===', error);
-        reject(new Error('Failed to extract text from PDF'));
+        console.error('=== PDF Processing Error ===', error);
+        reject(new Error('Failed to process PDF file'));
       }
     };
     
     reader.onerror = () => {
-      console.error('=== PDF Text Extraction: FileReader error ===');
+      console.error('=== FileReader Error ===');
       reject(new Error('Failed to read PDF file'));
     };
     
@@ -121,49 +92,70 @@ const extractTextFromPDF = async (file: File): Promise<string> => {
   });
 };
 
-// Extract text content from DOCX files
+// Enhanced DOCX text extraction
 const extractTextFromDOCX = async (file: File): Promise<string> => {
-  try {
-    // For DOCX files, try to read as text (simplified approach)
-    const text = await file.text();
-    console.log('=== DOCX Text Extraction: Success ===');
-    console.log('Extracted text preview:', text.substring(0, 300) + '...');
-    return text;
-  } catch (error) {
-    console.error('=== DOCX Text Extraction: Error ===', error);
-    throw new Error('Failed to extract text from DOCX');
-  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const arrayBuffer = reader.result as ArrayBuffer;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        console.log('=== Enhanced DOCX Processing ===');
+        console.log('File size:', uint8Array.length, 'bytes');
+        
+        // Convert to base64 for sending to edge function
+        let binary = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
+        }
+        const base64String = btoa(binary);
+        const dataUrl = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${base64String}`;
+        
+        console.log('=== DOCX converted to base64 ===');
+        console.log('Base64 length:', base64String.length);
+        
+        resolve(dataUrl);
+      } catch (error) {
+        console.error('=== DOCX Processing Error ===', error);
+        reject(new Error('Failed to process DOCX file'));
+      }
+    };
+    
+    reader.onerror = () => {
+      console.error('=== FileReader Error ===');
+      reject(new Error('Failed to read DOCX file'));
+    };
+    
+    reader.readAsArrayBuffer(file);
+  });
 };
 
-// Main function to process resume files using OpenAI
+// Main function to process resume files using enhanced OpenAI parsing
 export const processResumeFile = async (file: File): Promise<ResumeData> => {
-  console.log('=== processResumeFile: Starting text extraction and OpenAI processing ===');
+  console.log('=== processResumeFile: Starting enhanced processing ===');
   console.log('File details:', { name: file.name, type: file.type, size: file.size });
   
   try {
-    // Step 1: Extract text content from the file
-    console.log('=== processResumeFile: Extracting text content ===');
-    let textContent: string;
+    // Step 1: Convert file to base64 based on type
+    console.log('=== processResumeFile: Converting file to base64 ===');
+    let fileContent: string;
     
     if (file.type === 'application/pdf') {
-      textContent = await extractTextFromPDF(file);
+      fileContent = await extractTextFromPDF(file);
     } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      textContent = await extractTextFromDOCX(file);
+      fileContent = await extractTextFromDOCX(file);
     } else {
       throw new Error('Unsupported file type. Please upload a PDF or DOCX file.');
     }
     
-    if (!textContent || textContent.length < 10) {
-      throw new Error('Could not extract meaningful text from the file');
-    }
+    console.log('=== processResumeFile: File conversion successful ===');
     
-    console.log('=== processResumeFile: Text extraction successful ===');
-    
-    // Step 2: Send text content to OpenAI for parsing
-    console.log('=== processResumeFile: Calling parse-resume edge function ===');
+    // Step 2: Send to enhanced edge function for processing
+    console.log('=== processResumeFile: Calling enhanced parse-resume function ===');
     const { data, error } = await supabase.functions.invoke('parse-resume', {
       body: { 
-        textContent,
+        textContent: fileContent,
         fileName: file.name
       }
     });
@@ -178,15 +170,18 @@ export const processResumeFile = async (file: File): Promise<ResumeData> => {
       throw new Error('No resume data returned from parsing service');
     }
     
-    console.log('=== processResumeFile: OpenAI parsing successful ===');
-    console.log('Extracted data preview:', {
-      name: data.resumeData.personalInfo?.name,
+    console.log('=== processResumeFile: Enhanced parsing successful ===');
+    console.log('Extracted data summary:', {
+      name: data.resumeData.personalInfo?.name || 'Not found',
       experienceCount: data.resumeData.experience?.length || 0,
       skillsCount: data.resumeData.skills?.length || 0,
-      educationCount: data.resumeData.education?.length || 0
+      educationCount: data.resumeData.education?.length || 0,
+      hasContent: !!(data.resumeData.personalInfo?.name || 
+                     data.resumeData.experience?.length > 0 || 
+                     data.resumeData.skills?.length > 0)
     });
     
-    // Step 3: Add file data for download functionality
+    // Step 3: Add original file data for download functionality
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -200,7 +195,7 @@ export const processResumeFile = async (file: File): Promise<ResumeData> => {
     });
     
   } catch (error) {
-    console.error('=== processResumeFile: Error in processing ===', error);
+    console.error('=== processResumeFile: Error in enhanced processing ===', error);
     
     // Return a basic structure with file metadata on failure
     console.log('=== processResumeFile: Returning fallback structure ===');
