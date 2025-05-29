@@ -1,6 +1,7 @@
 
-import { processResumeFile, ResumeData } from '@/utils/resumeApiClient';
+import { processResumeFile } from '@/utils/resumeApiClient';
 import { validateResumeFile } from '@/utils/fileValidation';
+import { ResumeData } from '@/utils/types/resumeTypes';
 
 interface FileHandlerProps {
   addMessage: (message: any) => void;
@@ -64,7 +65,8 @@ export const useFileHandler = ({
     try {
       console.log('=== FileHandler: Starting external API resume processing ===');
       const resumeData = await processResumeFile(file);
-      console.log('=== FileHandler: External API processing complete ===', resumeData);
+      console.log('=== FileHandler: External API processing complete ===');
+      console.log('=== FULL JSON RESPONSE FROM API ===', JSON.stringify(resumeData, null, 2));
       
       setParsedData(resumeData);
       

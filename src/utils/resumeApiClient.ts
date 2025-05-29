@@ -9,6 +9,7 @@ import { ResumeData, processSkills, processExperience, processProjects } from '.
  */
 export async function parseResumeWithApi(formData: FormData): Promise<any | null> {
   try {
+    console.log('=== Sending request to external API ===');
     const res = await fetch('https://apenumat-100xminicapstoneapi.hf.space/parse-resume', {
       method: 'POST',
       body: formData,
@@ -20,7 +21,9 @@ export async function parseResumeWithApi(formData: FormData): Promise<any | null
     
     if (res.ok) {
       const jsonData = await res.json();
-      console.log('External API response:', jsonData);
+      console.log('=== RAW API RESPONSE ===');
+      console.log(JSON.stringify(jsonData, null, 2));
+      console.log('=== END RAW API RESPONSE ===');
       return jsonData;
     } else {
       throw new Error(`Server responded with status: ${res.status}`);
