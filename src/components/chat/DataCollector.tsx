@@ -1,14 +1,6 @@
-
 import React from 'react';
 import { ResumeData } from '@/utils/resumeProcessing';
-
-export interface FieldQuestion {
-  field: string;
-  question: string;
-  inputType: 'text' | 'textarea' | 'file';
-  required: boolean;
-  category: string;
-}
+import { FieldQuestion } from './types';
 
 export const FIELD_QUESTIONS: FieldQuestion[] = [
   { field: 'personalInfo.name', question: "What is your full name?", inputType: 'text', required: true, category: 'Personal' },

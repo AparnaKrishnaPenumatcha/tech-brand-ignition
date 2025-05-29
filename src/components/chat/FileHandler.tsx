@@ -8,9 +8,6 @@ interface FileHandlerProps {
   setIsLoading: (loading: boolean) => void;
   setParsedData: (data: Partial<ResumeData>) => void;
   setCurrentStep: (step: any) => void;
-  setCollectedData: (data: any) => void;
-  setNestedValue: (obj: any, path: string, value: any) => any;
-  askNextQuestion: () => void;
   startDataCollection: () => void;
   formatResumeDataSummary: (data: ResumeData) => string;
 }
@@ -20,12 +17,9 @@ export const useFileHandler = ({
   setIsLoading,
   setParsedData,
   setCurrentStep,
-  setCollectedData,
-  setNestedValue,
-  askNextQuestion,
   startDataCollection,
   formatResumeDataSummary
-}: Omit<FileHandlerProps, 'setCollectedData' | 'setNestedValue' | 'askNextQuestion'>) => {
+}: FileHandlerProps) => {
   
   const handleFileUpload = async (file: File, field?: string, callbacks?: {
     setCollectedData: (fn: (prev: any) => any) => void;
