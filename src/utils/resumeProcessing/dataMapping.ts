@@ -2,9 +2,81 @@
 import { ResumeData, processSkills, processExperience, processProjects } from '../resumeProcessing';
 
 /**
+ * Automatically categorizes a skill based on its name
+ */
+function categorizeSkill(skillName: string): string {
+  const skill = skillName.toLowerCase();
+  
+  // Frontend technologies
+  if (skill.includes('react') || skill.includes('vue') || skill.includes('angular') || 
+      skill.includes('javascript') || skill.includes('typescript') || skill.includes('html') || 
+      skill.includes('css') || skill.includes('sass') || skill.includes('less') || 
+      skill.includes('bootstrap') || skill.includes('tailwind') || skill.includes('jquery') ||
+      skill.includes('next') || skill.includes('nuxt') || skill.includes('svelte') ||
+      skill.includes('web') || skill.includes('frontend') || skill.includes('ui') ||
+      skill.includes('ux') || skill.includes('figma') || skill.includes('design')) {
+    return 'Frontend';
+  }
+  
+  // Backend technologies
+  if (skill.includes('node') || skill.includes('express') || skill.includes('django') || 
+      skill.includes('flask') || skill.includes('spring') || skill.includes('laravel') || 
+      skill.includes('ruby') || skill.includes('rails') || skill.includes('php') || 
+      skill.includes('java') || skill.includes('python') || skill.includes('c#') || 
+      skill.includes('c++') || skill.includes('go') || skill.includes('rust') ||
+      skill.includes('backend') || skill.includes('server') || skill.includes('api') ||
+      skill.includes('rest') || skill.includes('graphql') || skill.includes('microservices')) {
+    return 'Backend';
+  }
+  
+  // Database technologies
+  if (skill.includes('sql') || skill.includes('mysql') || skill.includes('postgresql') || 
+      skill.includes('mongodb') || skill.includes('redis') || skill.includes('elasticsearch') || 
+      skill.includes('oracle') || skill.includes('sqlite') || skill.includes('cassandra') ||
+      skill.includes('database') || skill.includes('db') || skill.includes('nosql')) {
+    return 'Database';
+  }
+  
+  // Cloud and DevOps
+  if (skill.includes('aws') || skill.includes('azure') || skill.includes('gcp') || 
+      skill.includes('docker') || skill.includes('kubernetes') || skill.includes('jenkins') || 
+      skill.includes('git') || skill.includes('github') || skill.includes('gitlab') ||
+      skill.includes('devops') || skill.includes('ci/cd') || skill.includes('terraform') ||
+      skill.includes('ansible') || skill.includes('cloud')) {
+    return 'Tools';
+  }
+  
+  // Default to Tools for anything else
+  return 'Tools';
+}
+
+/**
  * Maps API response data to the required ResumeData schema
  */
 export function mapApiDataToResumeData(jsonData: any): ResumeData {
+  // Process skills from API response
+  let processedSkills = [];
+  if (Array.isArray(jsonData.skills)) {
+    processedSkills = jsonData.skills.map((skill: any) => {
+      // Handle both string and object formats
+      const skillName = typeof skill === 'string' ? skill : skill.name || skill;
+      return {
+        name: skillName,
+        level: 80, // Default level since we don't get this from API
+        category: categorizeSkill(skillName)
+      };
+    });
+  } else {
+    // Fallback skills if none provided
+    processedSkills = [
+      { name: "JavaScript", level: 90, category: "Frontend" },
+      { name: "TypeScript", level: 85, category: "Frontend" },
+      { name: "React", level: 90, category: "Frontend" },
+      { name: "HTML/CSS", level: 85, category: "Frontend" },
+      { name: "Node.js", level: 80, category: "Backend" }
+    ];
+  }
+
   return {
     personalInfo: {
       name: jsonData.personalInfo?.name || "Your Name",
@@ -28,15 +100,7 @@ export function mapApiDataToResumeData(jsonData: any): ResumeData {
     ],
     experience: processExperience(Array.isArray(jsonData.experience) ? jsonData.experience : []),
     projects: processProjects(Array.isArray(jsonData.projects) ? jsonData.projects : []),
-    skills: Array.isArray(jsonData.skills) 
-      ? processSkills(jsonData.skills) 
-      : [
-          { name: "JavaScript", level: 90, category: "Frontend" },
-          { name: "TypeScript", level: 85, category: "Frontend" },
-          { name: "React", level: 90, category: "Frontend" },
-          { name: "HTML/CSS", level: 85, category: "Frontend" },
-          { name: "Node.js", level: 80, category: "Backend" }
-        ],
+    skills: processedSkills,
     certifications: Array.isArray(jsonData.certifications) ? jsonData.certifications.map((cert: any) => ({
       name: cert.name || "Certification",
       issuer: cert.issuer || "Issuer",
