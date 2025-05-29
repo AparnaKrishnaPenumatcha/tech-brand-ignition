@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { Download } from 'lucide-react';
+import { useResumeDownload } from '@/hooks/use-resume-download';
 
 interface ResumeData {
   personalInfo: {
@@ -30,8 +31,10 @@ interface AboutProps {
   resumeUrl?: string | null;
 }
 
-const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
-  const about = resumeData?.personalInfo?.about || "Professional with a passion for creating impactful solutions";
+const About: React.FC<AboutProps> = ({ resumeData }) => {
+  const { handleResumeDownload } = useResumeDownload();
+  
+  const about = resumeData?.personalInfo?.about || "Professional with a passion for creating impactful solutions and driving innovation in technology";
   const education = resumeData?.education?.[0] || { 
     degree: "Bachelor's Degree in Computer Science",
     institution: "University Name", 
@@ -40,25 +43,7 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
   
   // Get years of experience based on the number of positions
   const experienceYears = resumeData?.experience?.length ? `${resumeData.experience.length}+` : "5+";
-  const experienceDescription = "Across various industries";
-
-  const handleResumeDownload = () => {
-    if (resumeUrl) {
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = resumeUrl;
-      link.download = 'resume.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      toast({
-        title: "Resume not available",
-        description: "There was an issue retrieving your resume file",
-        variant: "destructive",
-      });
-    }
-  };
+  const experienceDescription = "Leading teams and delivering innovative solutions";
 
   return (
     <section id="about" className="py-24 bg-white">
@@ -86,16 +71,16 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
             </div>
             
             <p className="text-navy-600">
-              With over {experienceYears} years of experience in the industry, I've developed a deep understanding of 
+              With {experienceYears} years of experience in technology and leadership, I've developed a deep understanding of 
               building solutions that balance technical excellence with user-centered design. 
               My approach combines analytical thinking with creative problem-solving to deliver 
-              results that exceed expectations.
+              results that exceed expectations and drive meaningful change.
             </p>
             
             <p className="text-navy-600">
-              I believe in continuous learning and staying on top of industry trends, which allows 
-              me to implement cutting-edge solutions while ensuring they remain accessible and intuitive 
-              for end users.
+              I believe in continuous learning and staying at the forefront of technological innovation, 
+              which allows me to implement cutting-edge solutions while ensuring they remain accessible 
+              and create real impact for users and organizations.
             </p>
             
             <div className="pt-4 grid grid-cols-2 gap-6">
@@ -120,6 +105,7 @@ const About: React.FC<AboutProps> = ({ resumeData, resumeUrl }) => {
                 className="bg-electric-500 hover:bg-electric-600 text-white"
                 onClick={handleResumeDownload}
               >
+                <Download className="w-4 h-4 mr-2" />
                 Download Resume
               </Button>
             </div>

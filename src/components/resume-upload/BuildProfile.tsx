@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, CheckCircle } from 'lucide-react';
+import { Download, CheckCircle, Eye } from 'lucide-react';
 import { ResumeData } from '@/utils/resumeProcessing';
 
 interface BuildProfileProps {
@@ -122,7 +123,7 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
                   <p className="text-green-700 font-medium">Resume generated successfully!</p>
                 </div>
                 <p className="text-green-600 text-sm mt-1">
-                  Your personalized resume is ready for download.
+                  Your personalized resume is ready for download and your portfolio has been updated.
                 </p>
               </div>
               
@@ -134,6 +135,13 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
                   <Download className="w-4 h-4 mr-2" />
                   Download Resume
                 </Button>
+                
+                <Link to="/">
+                  <Button variant="outline" className="border-electric-500 text-electric-500 hover:bg-electric-50">
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Portfolio
+                  </Button>
+                </Link>
                 
                 <Button
                   onClick={onBack}
@@ -150,7 +158,7 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       {isComplete && (
         <div className="text-center text-sm text-navy-500">
           <p>
-            Your resume has been generated as a text file. You can edit it further using your preferred word processor.
+            Your resume has been generated and your portfolio landing page has been updated with your information.
           </p>
         </div>
       )}
