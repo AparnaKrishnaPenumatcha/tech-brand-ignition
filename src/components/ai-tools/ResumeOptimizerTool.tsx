@@ -49,6 +49,12 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
     }
   };
 
+  const formatAnalysis = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br />');
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -97,9 +103,10 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
               <CardTitle>Optimization Report</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg">
-                {analysis}
-              </div>
+              <div 
+                className="text-sm bg-gray-50 p-4 rounded-lg"
+                dangerouslySetInnerHTML={{ __html: formatAnalysis(analysis) }}
+              />
             </CardContent>
           </Card>
         )}
