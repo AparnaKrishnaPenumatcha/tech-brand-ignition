@@ -31,7 +31,11 @@ export const useAITools = () => {
     
     try {
       const { data, error } = await supabase.functions.invoke('optimize-resume', {
-        body: { resumeData, targetRole }
+        body: { 
+          resumeData, 
+          targetRole,
+          fileData: resumeData?.fileData // Pass the original file data if available
+        }
       });
       
       if (error) throw error;
