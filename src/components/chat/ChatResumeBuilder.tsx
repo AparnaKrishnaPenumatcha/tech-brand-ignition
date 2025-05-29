@@ -1,10 +1,8 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import ChatInterface from './ChatInterface';
 import ParsedDataSummary from './ParsedDataSummary';
-import ResumeDataManager from './ResumeDataManager';
 import { processResumeFile, ResumeData } from '@/utils/resumeProcessing';
 import { validateResumeFile } from '@/utils/fileValidation';
 import { ChatMessage, FieldQuestion } from './types';
@@ -53,7 +51,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     }]);
   }, []);
 
-  // Helper functions (moved outside of ResumeDataManager)
+  // Helper functions
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   };
@@ -74,7 +72,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
   };
 
   const getDefaultResumeData = (): ResumeData => ({
-    fileName: '',
+    fileName: 'chat_generated_resume',
     fileData: null,
     uploadDate: new Date().toISOString(),
     personalInfo: {
@@ -189,15 +187,26 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
   };
 
   const completeDataCollection = () => {
-    const finalData: ResumeData = {
-      ...getDefaultResumeData(),
+    console.log('=== ChatResumeBuilder: Starting data completion ===');
+    console.log('Parsed data:', parsedData);
+    console.log('Collected data:', collectedData);
+
+    // Merge data with proper structure
+    const baseData = getDefaultResumeData();
+    const mergedData = {
+      ...baseData,
       ...parsedData,
-      ...collectedData,
-      fileName: 'chat_generated_resume',
-      uploadDate: new Date().toISOString()
+      ...collectedData
     };
 
-    console.log('Final data before completion:', finalData);
+    // Ensure personalInfo is properly merged
+    mergedData.personalInfo = {
+      ...baseData.personalInfo,
+      ...parsedData?.personalInfo,
+      ...collectedData?.personalInfo
+    };
+
+    console.log('Final merged data:', mergedData);
 
     addMessage({
       type: 'bot',
@@ -205,7 +214,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     });
 
     setCurrentStep('complete');
-    onComplete(finalData);
+    onComplete(mergedData);
   };
 
   const handleSendMessage = (message: string, field?: string) => {
@@ -215,8 +224,8 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     });
 
     if (field) {
-      console.log(`Updating field ${field} with value:`, message);
-      // Update collected data
+      console.log(`=== ChatResumeBuilder: Updating field ${field} with value:`, message);
+      
       setCollectedData(prev => {
         const updated = setNestedValue(prev, field, message);
         console.log('Updated collected data:', updated);

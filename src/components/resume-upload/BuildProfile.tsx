@@ -17,71 +17,42 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
 
   useEffect(() => {
     const generateProfile = async () => {
+      console.log('=== BuildProfile: Starting profile generation ===');
+      console.log('Received resumeData:', resumeData);
+      
       setIsGenerating(true);
       
-      console.log('=== BuildProfile: Starting data save process ===');
-      console.log('Raw resumeData received:', resumeData);
-      
-      // Ensure we have a complete data structure
-      const completeResumeData: ResumeData = {
-        fileName: resumeData.fileName || 'chat_generated_resume',
-        fileData: resumeData.fileData,
-        uploadDate: resumeData.uploadDate || new Date().toISOString(),
-        personalInfo: {
-          name: resumeData.personalInfo?.name || '',
-          title: resumeData.personalInfo?.title || '',
-          email: resumeData.personalInfo?.email || '',
-          phone: resumeData.personalInfo?.phone || '',
-          location: resumeData.personalInfo?.location || '',
-          about: resumeData.personalInfo?.about || '',
-          profilePhoto: resumeData.personalInfo?.profilePhoto || ''
-        },
-        summary: resumeData.summary || '',
-        education: resumeData.education || [],
-        experience: resumeData.experience || [],
-        skills: resumeData.skills || [],
-        projects: resumeData.projects || [],
-        certifications: resumeData.certifications || []
-      };
-      
-      console.log('Complete structured data to save:', completeResumeData);
-      
-      // Save to localStorage
-      const dataToSave = JSON.stringify(completeResumeData);
-      console.log('Data being saved to localStorage:', dataToSave);
-      
-      localStorage.setItem('resumeData', dataToSave);
-      
-      // Verify the save worked
-      const savedData = localStorage.getItem('resumeData');
-      console.log('Verification - data retrieved from localStorage:', savedData);
-      
-      if (savedData) {
-        try {
-          const parsedSavedData = JSON.parse(savedData);
-          console.log('Parsed saved data:', parsedSavedData);
-        } catch (error) {
-          console.error('Error parsing saved data:', error);
-        }
+      // Save data to localStorage
+      try {
+        const dataToSave = JSON.stringify(resumeData);
+        console.log('Saving to localStorage:', dataToSave);
+        localStorage.setItem('resumeData', dataToSave);
+        
+        // Verify the save
+        const savedData = localStorage.getItem('resumeData');
+        console.log('Verification - saved data:', savedData);
+        
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Create download URL
+        const resumeContent = generateResumeContent(resumeData);
+        const blob = new Blob([resumeContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        setDownloadUrl(url);
+        
+        setIsGenerating(false);
+        setIsComplete(true);
+        
+        // Dispatch update event
+        console.log('Dispatching resumeDataUpdated event');
+        window.dispatchEvent(new CustomEvent('resumeDataUpdated'));
+        
+        console.log('=== BuildProfile: Profile generation complete ===');
+      } catch (error) {
+        console.error('Error during profile generation:', error);
+        setIsGenerating(false);
       }
-      
-      // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create a resume file for download
-      const resumeContent = generateResumeContent(completeResumeData);
-      const blob = new Blob([resumeContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      
-      setDownloadUrl(url);
-      setIsGenerating(false);
-      setIsComplete(true);
-      
-      // Trigger update event for other components
-      console.log('Dispatching resumeDataUpdated event');
-      window.dispatchEvent(new CustomEvent('resumeDataUpdated'));
-      
-      console.log('=== BuildProfile: Data save process complete ===');
     };
 
     generateProfile();
