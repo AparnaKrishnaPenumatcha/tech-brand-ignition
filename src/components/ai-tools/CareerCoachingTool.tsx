@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAITools } from '@/hooks/useAITools';
 import { ResumeData } from '@/utils/resumeProcessing';
-import { ArrowLeft, TrendingUp } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Target, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { renderMarkdownText } from './utils/markdownUtils';
 
 interface CareerCoachingToolProps {
   onBack: () => void;
@@ -59,6 +58,96 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
         variant: "destructive"
       });
     }
+  };
+
+  const parseCoachingContent = (content: string) => {
+    const sections = content.split(/(?=###?\s)/);
+    return sections.filter(section => section.trim().length > 0);
+  };
+
+  const renderSection = (content: string, index: number) => {
+    const lines = content.split('\n').filter(line => line.trim().length > 0);
+    const title = lines[0]?.replace(/^#+\s*/, '').trim();
+    const body = lines.slice(1);
+
+    const getIcon = (title: string) => {
+      if (title.toLowerCase().includes('skill gap')) return Target;
+      if (title.toLowerCase().includes('learning') || title.toLowerCase().includes('roadmap')) return BookOpen;
+      if (title.toLowerCase().includes('timeline')) return Calendar;
+      if (title.toLowerCase().includes('next steps')) return CheckCircle;
+      return TrendingUp;
+    };
+
+    const IconComponent = getIcon(title);
+
+    return (
+      <Card key={index} className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <IconComponent className="w-5 h-5 text-orange-500" />
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {body.map((line, lineIndex) => {
+              const trimmedLine = line.trim();
+              
+              // Handle subheadings
+              if (trimmedLine.startsWith('####')) {
+                return (
+                  <h4 key={lineIndex} className="font-semibold text-navy-800 mt-4 mb-2 text-base">
+                    {trimmedLine.replace(/^#+\s*/, '')}
+                  </h4>
+                );
+              }
+              
+              // Handle bullet points
+              if (trimmedLine.startsWith('-')) {
+                return (
+                  <div key={lineIndex} className="flex items-start gap-2 ml-4">
+                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span className="text-navy-700">{trimmedLine.substring(1).trim()}</span>
+                  </div>
+                );
+              }
+              
+              // Handle numbered lists
+              if (/^\d+\./.test(trimmedLine)) {
+                return (
+                  <div key={lineIndex} className="flex items-start gap-2 ml-4">
+                    <span className="text-orange-500 font-medium text-sm mt-0.5 flex-shrink-0">
+                      {trimmedLine.match(/^\d+\./)?.[0]}
+                    </span>
+                    <span className="text-navy-700">{trimmedLine.replace(/^\d+\.\s*/, '')}</span>
+                  </div>
+                );
+              }
+              
+              // Handle phase headers (e.g., "Phase 1:")
+              if (/^Phase\s+\d+:/i.test(trimmedLine)) {
+                return (
+                  <div key={lineIndex} className="bg-electric-50 p-3 rounded-lg border-l-4 border-electric-500 mt-3">
+                    <h5 className="font-semibold text-electric-700">{trimmedLine}</h5>
+                  </div>
+                );
+              }
+              
+              // Handle regular paragraphs
+              if (trimmedLine.length > 0) {
+                return (
+                  <p key={lineIndex} className="text-navy-700 leading-relaxed">
+                    {trimmedLine}
+                  </p>
+                );
+              }
+              
+              return null;
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -117,22 +206,15 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
         </Card>
 
         {coaching && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Personalized Career Roadmap</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-gray max-w-none">
-                <div className="text-sm leading-relaxed space-y-4 bg-gray-50 p-6 rounded-lg border">
-                  {coaching.split('\n\n').map((section, index) => (
-                    <div key={index} className="space-y-2">
-                      {renderMarkdownText(section)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div>
+            <h2 className="text-2xl font-bold text-navy-900 mb-6 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-orange-500" />
+              Your Personalized Career Roadmap
+            </h2>
+            {parseCoachingContent(coaching).map((section, index) => 
+              renderSection(section, index)
+            )}
+          </div>
         )}
       </div>
     </div>
