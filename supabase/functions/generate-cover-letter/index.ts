@@ -15,6 +15,9 @@ serve(async (req) => {
   try {
     const { jobDescription, resumeData } = await req.json()
     
+    // Build a comprehensive candidate profile from resume data
+    const candidateProfile = buildCandidateProfile(resumeData);
+    
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -26,15 +29,15 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional cover letter writer. Generate personalized, compelling cover letters that highlight relevant experience and skills for the specific job.'
+            content: 'You are a professional cover letter writer. Generate personalized, compelling cover letters that highlight relevant experience and skills for the specific job. Use specific details from the candidate\'s background to create a connection with the job requirements. Write in a professional but engaging tone.'
           },
           {
             role: 'user',
-            content: `Generate a cover letter for this job:\n\n${jobDescription}\n\nBased on this candidate profile:\nName: ${resumeData?.personalInfo?.name || 'Candidate'}\nTitle: ${resumeData?.personalInfo?.title || 'Professional'}\nExperience: ${resumeData?.experience?.map(exp => `${exp.title} at ${exp.company}`).join(', ') || 'Various roles'}\nSkills: ${resumeData?.skills?.map(skill => skill.name).join(', ') || 'Multiple skills'}`
+            content: `Generate a professional cover letter for this job posting:\n\n${jobDescription}\n\nBased on this candidate's detailed profile:\n${candidateProfile}\n\nPlease create a compelling cover letter that:\n1. Addresses the specific job requirements\n2. Highlights relevant experience from their background\n3. Mentions specific companies, projects, or achievements when relevant\n4. Shows enthusiasm for the role and company\n5. Includes a professional greeting and closing`
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 1500
       }),
     })
 
@@ -58,3 +61,113 @@ serve(async (req) => {
     )
   }
 })
+
+function buildCandidateProfile(resumeData: any): string {
+  if (!resumeData) {
+    return "No resume data available";
+  }
+
+  let profile = "";
+  
+  // Personal Information
+  if (resumeData.personalInfo) {
+    const { name, title, email, phone, location, about } = resumeData.personalInfo;
+    profile += `PERSONAL INFORMATION:\n`;
+    if (name) profile += `Name: ${name}\n`;
+    if (title) profile += `Current Title: ${title}\n`;
+    if (location) profile += `Location: ${location}\n`;
+    if (about) profile += `About: ${about}\n`;
+    profile += `\n`;
+  }
+
+  // Professional Summary
+  if (resumeData.summary) {
+    profile += `PROFESSIONAL SUMMARY:\n${resumeData.summary}\n\n`;
+  }
+
+  // Work Experience
+  if (resumeData.experience && resumeData.experience.length > 0) {
+    profile += `WORK EXPERIENCE:\n`;
+    resumeData.experience.forEach((exp: any, index: number) => {
+      profile += `${index + 1}. ${exp.title || 'Position'} at ${exp.company || 'Company'}\n`;
+      if (exp.duration) profile += `   Duration: ${exp.duration}\n`;
+      if (exp.description) profile += `   Description: ${exp.description}\n`;
+      profile += `\n`;
+    });
+  }
+
+  // Skills
+  if (resumeData.skills && resumeData.skills.length > 0) {
+    profile += `SKILLS:\n`;
+    const skillsByCategory: { [key: string]: string[] } = {};
+    
+    resumeData.skills.forEach((skill: any) => {
+      const category = skill.category || 'General';
+      if (!skillsByCategory[category]) {
+        skillsByCategory[category] = [];
+      }
+      skillsByCategory[category].push(skill.name);
+    });
+
+    Object.entries(skillsByCategory).forEach(([category, skills]) => {
+      profile += `${category}: ${skills.join(', ')}\n`;
+    });
+    profile += `\n`;
+  }
+
+  // Projects
+  if (resumeData.projects && resumeData.projects.length > 0) {
+    profile += `KEY PROJECTS:\n`;
+    resumeData.projects.forEach((project: any, index: number) => {
+      profile += `${index + 1}. ${project.title || 'Project'}\n`;
+      if (project.description) profile += `   Description: ${project.description}\n`;
+      if (project.outcome) profile += `   Outcome: ${project.outcome}\n`;
+      if (project.tags && project.tags.length > 0) {
+        profile += `   Technologies: ${project.tags.join(', ')}\n`;
+      }
+      profile += `\n`;
+    });
+  }
+
+  // Education
+  if (resumeData.education && resumeData.education.length > 0) {
+    profile += `EDUCATION:\n`;
+    resumeData.education.forEach((edu: any, index: number) => {
+      profile += `${index + 1}. ${edu.degree || 'Degree'} in ${edu.field || 'Field'}\n`;
+      if (edu.school) profile += `   Institution: ${edu.school}\n`;
+      if (edu.year) profile += `   Year: ${edu.year}\n`;
+      if (edu.gpa) profile += `   GPA: ${edu.gpa}\n`;
+      profile += `\n`;
+    });
+  }
+
+  // Certifications
+  if (resumeData.certifications && resumeData.certifications.length > 0) {
+    profile += `CERTIFICATIONS:\n`;
+    resumeData.certifications.forEach((cert: any, index: number) => {
+      profile += `${index + 1}. ${cert.name || 'Certification'}`;
+      if (cert.issuer) profile += ` - ${cert.issuer}`;
+      if (cert.year) profile += ` (${cert.year})`;
+      profile += `\n`;
+    });
+    profile += `\n`;
+  }
+
+  // Leadership Experience
+  if (resumeData.leadership) {
+    profile += `LEADERSHIP EXPERIENCE:\n${resumeData.leadership}\n\n`;
+  }
+
+  // Testimonials
+  if (resumeData.testimonials && resumeData.testimonials.length > 0) {
+    profile += `TESTIMONIALS:\n`;
+    resumeData.testimonials.forEach((testimonial: any, index: number) => {
+      profile += `${index + 1}. "${testimonial.quote || 'Quote'}"`;
+      if (testimonial.name) profile += ` - ${testimonial.name}`;
+      if (testimonial.role) profile += `, ${testimonial.role}`;
+      profile += `\n`;
+    });
+  }
+
+  return profile;
+}
