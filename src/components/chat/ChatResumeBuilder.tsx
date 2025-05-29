@@ -1,25 +1,18 @@
-
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import ChatInterface, { ChatMessage } from './ChatInterface';
 import ParsedDataSummary from './ParsedDataSummary';
+import ResumeDataManager from './ResumeDataManager';
 import { processResumeFile, ResumeData } from '@/utils/resumeProcessing';
 import { validateResumeFile } from '@/utils/fileValidation';
+import { ChatMessage, FieldQuestion } from './types';
 
 interface ChatResumeBuilderProps {
   onComplete: (data: ResumeData) => void;
 }
 
 type FlowStep = 'welcome' | 'upload-summary' | 'data-collection' | 'complete';
-
-interface FieldQuestion {
-  field: string;
-  question: string;
-  inputType: 'text' | 'textarea' | 'file';
-  required: boolean;
-  category: string;
-}
 
 const FIELD_QUESTIONS: FieldQuestion[] = [
   { field: 'personalInfo.profilePhoto', question: "Please upload a professional headshot or profile photo to display on your landing page.", inputType: 'file', required: false, category: 'Personal' },
@@ -252,45 +245,49 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold text-navy-900 mb-2">
-          Build Your Resume & Portfolio
-        </h1>
-        <p className="text-navy-600">
-          Let me help you create a professional resume and showcase your talents
-        </p>
-      </div>
+    <ResumeDataManager>
+      {({ getNestedValue, setNestedValue, getDefaultResumeData }) => (
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl font-bold text-navy-900 mb-2">
+              Build Your Resume & Portfolio
+            </h1>
+            <p className="text-navy-600">
+              Let me help you create a professional resume and showcase your talents
+            </p>
+          </div>
 
-      {currentStep === 'upload-summary' && parsedData && (
-        <div className="mb-6">
-          <ParsedDataSummary 
-            data={parsedData}
-            onEditRequest={(fields) => {
-              setFieldsToEdit(fields);
-              startDataCollection();
-            }}
-            onAcceptAll={() => {
-              addMessage({
-                type: 'user',
-                content: "No, looks good"
-              });
-              handleOptionSelect("No, looks good");
-            }}
+          {currentStep === 'upload-summary' && parsedData && (
+            <div className="mb-6">
+              <ParsedDataSummary 
+                data={parsedData}
+                onEditRequest={(fields) => {
+                  setFieldsToEdit(fields);
+                  startDataCollection();
+                }}
+                onAcceptAll={() => {
+                  addMessage({
+                    type: 'user',
+                    content: "No, looks good"
+                  });
+                  handleOptionSelect("No, looks good");
+                }}
+              />
+            </div>
+          )}
+
+          <ChatInterface
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onFileUpload={handleFileUpload}
+            onOptionSelect={handleOptionSelect}
+            isLoading={isLoading}
+            currentField={getCurrentField()}
+            currentInputType={getCurrentInputType()}
           />
         </div>
       )}
-
-      <ChatInterface
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        onFileUpload={handleFileUpload}
-        onOptionSelect={handleOptionSelect}
-        isLoading={isLoading}
-        currentField={getCurrentField()}
-        currentInputType={getCurrentInputType()}
-      />
-    </div>
+    </ResumeDataManager>
   );
 };
 
