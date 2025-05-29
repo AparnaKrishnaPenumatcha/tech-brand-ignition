@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAITools } from '@/hooks/useAITools';
 import { ResumeData } from '@/utils/resumeProcessing';
-import { ArrowLeft, Target, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Target, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResumeOptimizerToolProps {
@@ -112,7 +112,22 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
         }
       } catch (e) {
         console.error('Failed to parse improvements JSON:', e);
+        // If it's just a plain string, wrap it in an object
+        return [{
+          area: "General Improvement",
+          suggestion: improvements,
+          impact: "Enhanced resume quality"
+        }];
       }
+    }
+    
+    // If it's an object but not an array, try to extract meaningful data
+    if (typeof improvements === 'object' && improvements !== null) {
+      return Object.entries(improvements).map(([key, value]) => ({
+        area: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+        suggestion: typeof value === 'string' ? value : JSON.stringify(value),
+        impact: "Improved resume effectiveness"
+      }));
     }
     
     // Fallback: return empty array
@@ -162,64 +177,86 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
         </Card>
 
         {analysis && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Overall Score Card */}
-            <Card>
+            <Card className="border-l-4 border-l-green-500">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Overall Score</span>
+                  <span className="flex items-center gap-2">
+                    <Target className="w-6 h-6 text-green-500" />
+                    Overall Score
+                  </span>
                   <div className="flex items-center gap-2">
                     {getScoreIcon(analysis.overallScore)}
-                    <span className={`text-2xl font-bold ${getScoreColor(analysis.overallScore)}`}>
+                    <span className={`text-3xl font-bold ${getScoreColor(analysis.overallScore)}`}>
                       {analysis.overallScore}/100
                     </span>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-gray-600">
+                <div className="text-gray-700 leading-relaxed">
                   {renderMarkdownText(analysis.summary)}
                 </div>
               </CardContent>
             </Card>
 
             {/* Strengths Card */}
-            <Card>
+            <Card className="border-l-4 border-l-green-400">
               <CardHeader>
-                <CardTitle className="text-green-600">✅ Strengths</CardTitle>
+                <CardTitle className="text-green-700 flex items-center gap-2">
+                  <CheckCircle className="w-6 h-6" />
+                  What's Working Well
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
+                <div className="space-y-3">
                   {analysis.strengths.map((strength, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm">
+                    <div key={index} className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-green-800 leading-relaxed">
                         {renderMarkdownText(strength)}
                       </div>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </CardContent>
             </Card>
 
             {/* Improvements Card */}
-            <Card>
+            <Card className="border-l-4 border-l-orange-400">
               <CardHeader>
-                <CardTitle className="text-orange-600">🚀 Areas for Improvement</CardTitle>
+                <CardTitle className="text-orange-700 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6" />
+                  Areas for Improvement
+                </CardTitle>
+                <p className="text-sm text-orange-600 mt-1">
+                  Specific recommendations to enhance your resume's impact
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {parseImprovements(analysis.improvements).map((improvement, index) => (
-                    <div key={index} className="border-l-4 border-orange-200 pl-4">
-                      <h4 className="font-medium text-orange-800">
-                        {improvement.area || `Improvement ${index + 1}`}
-                      </h4>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {renderMarkdownText(improvement.suggestion || improvement)}
+                    <div key={index} className="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-200">
+                      <div className="mb-3">
+                        <h4 className="font-semibold text-orange-800 text-lg">
+                          {improvement.area || `Improvement ${index + 1}`}
+                        </h4>
                       </div>
+                      
+                      <div className="mb-3">
+                        <h5 className="font-medium text-gray-700 mb-2">Suggestion:</h5>
+                        <div className="text-sm text-gray-700 leading-relaxed pl-3 border-l-2 border-gray-200">
+                          {renderMarkdownText(improvement.suggestion || improvement)}
+                        </div>
+                      </div>
+                      
                       {improvement.impact && (
-                        <div className="text-xs text-green-600 mt-1">
-                          <strong>Expected Impact:</strong> {renderMarkdownText(improvement.impact)}
+                        <div>
+                          <h5 className="font-medium text-green-700 mb-2">Expected Impact:</h5>
+                          <div className="text-sm text-green-700 leading-relaxed pl-3 border-l-2 border-green-200">
+                            {renderMarkdownText(improvement.impact)}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -230,23 +267,29 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
 
             {/* Keywords Card */}
             {analysis.keywordsToAdd && analysis.keywordsToAdd.length > 0 && (
-              <Card>
+              <Card className="border-l-4 border-l-blue-400">
                 <CardHeader>
-                  <CardTitle className="text-blue-600">🔍 Recommended Keywords</CardTitle>
+                  <CardTitle className="text-blue-700 flex items-center gap-2">
+                    <Target className="w-6 h-6" />
+                    Recommended Keywords
+                  </CardTitle>
+                  <p className="text-sm text-blue-600 mt-1">
+                    Strategic keywords to improve ATS compatibility and relevance
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {analysis.keywordsToAdd.map((keyword, index) => (
                       <span 
                         key={index}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                        className="px-3 py-2 bg-blue-100 text-blue-800 text-sm rounded-full border border-blue-200 hover:bg-blue-200 transition-colors"
                       >
                         {keyword}
                       </span>
                     ))}
                   </div>
                 </CardContent>
-            </Card>
+              </Card>
             )}
           </div>
         )}
