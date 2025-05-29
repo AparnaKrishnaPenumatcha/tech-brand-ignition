@@ -38,63 +38,116 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   };
 
-  const parseListData = (text: string, field: string): any[] => {
+  const parseEducationData = (text: string): any[] => {
     if (!text.trim()) return [];
     
     const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(' - ');
+      return {
+        degree: parts[0] || line,
+        institution: parts[1] || '',
+        year: parts[2] || ''
+      };
+    });
+  };
+
+  const parseExperienceData = (text: string): any[] => {
+    if (!text.trim()) return [];
     
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(' | ');
+      const titleCompany = parts[0] || line;
+      let title = titleCompany;
+      let company = '';
+      
+      // Handle "Title at Company" format
+      if (titleCompany.includes(' at ')) {
+        const atIndex = titleCompany.lastIndexOf(' at ');
+        title = titleCompany.substring(0, atIndex);
+        company = titleCompany.substring(atIndex + 4);
+      }
+      
+      return {
+        title: title.trim(),
+        company: company.trim(),
+        duration: parts[1] || '',
+        description: parts[2] || ''
+      };
+    });
+  };
+
+  const parseProjectsData = (text: string): any[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(' | ');
+      return {
+        title: parts[0] || line,
+        description: parts[1] || '',
+        outcome: parts[2] || '',
+        tags: []
+      };
+    });
+  };
+
+  const parseCertificationsData = (text: string): any[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(' - ');
+      return {
+        name: parts[0] || line,
+        issuer: parts[1] || '',
+        year: parts[2] || ''
+      };
+    });
+  };
+
+  const parseSkillsData = (text: string): any[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => ({
+      name: line.trim(),
+      level: 80,
+      category: 'Other'
+    }));
+  };
+
+  const parseTestimonialsData = (text: string): any[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map(line => {
+      const parts = line.split(' - ');
+      return {
+        quote: parts[0] || line,
+        name: parts[1] || '',
+        role: parts[2] || ''
+      };
+    });
+  };
+
+  const parseListData = (text: string, field: string): any[] => {
     switch (field) {
-      case 'certifications':
-        return lines.map(line => {
-          const parts = line.split(' - ');
-          return {
-            name: parts[0] || line,
-            issuer: parts[1] || '',
-            year: parts[2] || ''
-          };
-        });
-      
-      case 'projects':
-        return lines.map(line => {
-          const parts = line.split(' | ');
-          return {
-            title: parts[0] || line,
-            description: parts[1] || '',
-            outcome: parts[2] || '',
-            tags: []
-          };
-        });
-      
+      case 'education':
+        return parseEducationData(text);
       case 'experience':
-        return lines.map(line => {
-          const parts = line.split(' | ');
-          return {
-            title: parts[0] || line,
-            company: parts[0]?.includes(' at ') ? parts[0].split(' at ')[1] : '',
-            duration: parts[1] || '',
-            description: parts[2] || ''
-          };
-        });
-      
+        return parseExperienceData(text);
+      case 'projects':
+        return parseProjectsData(text);
+      case 'certifications':
+        return parseCertificationsData(text);
       case 'skills':
-        return lines.map(line => ({
-          name: line.trim(),
-          level: 80,
-          category: 'Other'
-        }));
-      
+        return parseSkillsData(text);
       case 'testimonials':
-        return lines.map(line => {
-          const parts = line.split(' - ');
-          return {
-            quote: parts[0] || line,
-            name: parts[1] || '',
-            role: parts[2] || ''
-          };
-        });
-      
+        return parseTestimonialsData(text);
       default:
-        return lines;
+        return text.split('\n').filter(line => line.trim());
     }
   };
 
@@ -110,16 +163,22 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
       ...collectedData
     };
 
+    // Merge personal info carefully
     mergedData.personalInfo = {
       ...baseData.personalInfo,
       ...parsedData?.personalInfo,
       ...collectedData?.personalInfo
     };
 
-    ['certifications', 'projects', 'experience', 'skills', 'testimonials'].forEach(field => {
+    // Process array fields that might have been collected as text
+    ['education', 'experience', 'projects', 'certifications', 'skills', 'testimonials'].forEach(field => {
       const textValue = getNestedValue(collectedData, field);
       if (typeof textValue === 'string' && textValue.trim()) {
+        console.log(`=== FlowManager: Processing ${field} from text ===`);
         mergedData[field as keyof ResumeData] = parseListData(textValue, field) as any;
+      } else if (parsedData && Array.isArray(getNestedValue(parsedData, field))) {
+        // Use parsed data if available and collected data is not provided
+        mergedData[field as keyof ResumeData] = getNestedValue(parsedData, field) as any;
       }
     });
 
