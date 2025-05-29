@@ -14,13 +14,17 @@ export const useMessageHandler = () => {
     }
   ]);
 
+  // Counter to ensure unique IDs
+  const [messageCounter, setMessageCounter] = useState(2);
+
   const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     setMessages(prev => [...prev, {
       ...message,
-      id: Date.now().toString(),
+      id: `msg-${messageCounter}-${Date.now()}`,
       timestamp: new Date()
     }]);
-  }, []);
+    setMessageCounter(prev => prev + 1);
+  }, [messageCounter]);
 
   const formatResumeDataSummary = (data: ResumeData): string => {
     let summary = "Here's what I extracted from your resume:\n\n";
