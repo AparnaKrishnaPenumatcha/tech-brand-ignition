@@ -3,9 +3,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useResumeDownload } from '@/hooks/use-resume-download';
+import { ResumeData } from '@/utils/resumeProcessing';
 
-const EnhancedHero: React.FC = () => {
+interface EnhancedHeroProps {
+  resumeData?: ResumeData | null;
+}
+
+const EnhancedHero: React.FC<EnhancedHeroProps> = ({ resumeData }) => {
   const { handleResumeDownload, hasResume } = useResumeDownload();
+  
+  const name = resumeData?.personalInfo?.name || "Your Name";
+  const title = resumeData?.personalInfo?.title || "Future Leader in Tech & Innovation";
   
   return (
     <section id="home" className="py-24 md:py-32 bg-white relative overflow-hidden">
@@ -15,16 +23,15 @@ const EnhancedHero: React.FC = () => {
           <div className="w-full md:w-7/12 space-y-6 text-center md:text-left">
             <div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy-900 leading-tight">
-                Hello, I'm <span className="text-electric-500">Your Name</span>
+                Hello, I'm <span className="text-electric-500">{name}</span>
               </h1>
               <h2 className="text-2xl md:text-3xl text-navy-700 mt-4">
-                Future Leader in Tech & Innovation
+                {title}
               </h2>
             </div>
             
             <p className="text-lg text-navy-600 max-w-xl">
-              Passionate about driving technological advancement and leading innovative solutions 
-              that create meaningful impact. Ready to shape the future of technology.
+              {resumeData?.summary || "Passionate about driving technological advancement and leading innovative solutions that create meaningful impact. Ready to shape the future of technology."}
             </p>
             
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">

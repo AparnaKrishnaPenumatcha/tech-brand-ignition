@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,9 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
     const generateProfile = async () => {
       setIsGenerating(true);
       
+      // Save to localStorage first
+      localStorage.setItem('resumeData', JSON.stringify(resumeData));
+      
       // Simulate processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -32,6 +34,9 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       setDownloadUrl(url);
       setIsGenerating(false);
       setIsComplete(true);
+      
+      // Trigger a custom event to notify other components that resume data has been updated
+      window.dispatchEvent(new CustomEvent('resumeDataUpdated'));
     };
 
     generateProfile();
