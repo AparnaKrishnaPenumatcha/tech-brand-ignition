@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Star, Award } from 'lucide-react';
-import { renderMarkdownText } from '../utils/textUtils';
+import { renderMarkdownText } from '../utils/markdownUtils';
 
 interface StrengthsCardProps {
   strengths: string[];

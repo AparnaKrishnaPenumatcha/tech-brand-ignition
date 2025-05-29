@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Target, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { getScoreColor, getScoreIcon, getScoreBadgeColor } from '../utils/scoreUtils';
-import { renderMarkdownText } from '../utils/textUtils';
+import { renderMarkdownText } from '../utils/markdownUtils';
 
 interface ScoreCardProps {
   score: number;

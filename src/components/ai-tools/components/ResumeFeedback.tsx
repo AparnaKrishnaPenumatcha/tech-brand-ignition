@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { renderMarkdownText } from '../utils/textUtils';
+import { renderMarkdownText } from '../utils/markdownUtils';
 
 interface Improvement {
   area: string;
