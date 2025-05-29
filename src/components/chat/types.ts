@@ -8,11 +8,3 @@ export interface ChatMessage {
   options?: string[];
   inputType?: 'text' | 'textarea' | 'file' | 'select';
 }
-
-export interface FieldQuestion {
-  field: string;
-  question: string;
-  inputType: 'text' | 'textarea' | 'file';
-  required: boolean;
-  category: string;
-}
