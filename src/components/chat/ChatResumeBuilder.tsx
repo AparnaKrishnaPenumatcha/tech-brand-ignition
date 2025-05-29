@@ -53,18 +53,52 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     }]);
   }, []);
 
+  // Helper functions (moved outside of ResumeDataManager)
+  const getNestedValue = (obj: any, path: string): any => {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  };
+
+  const setNestedValue = (obj: any, path: string, value: any): any => {
+    const keys = path.split('.');
+    const result = { ...obj };
+    let current = result;
+    
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if (!current[key]) current[key] = {};
+      current = current[key];
+    }
+    
+    current[keys[keys.length - 1]] = value;
+    return result;
+  };
+
+  const getDefaultResumeData = (): ResumeData => ({
+    fileName: '',
+    fileData: null,
+    uploadDate: new Date().toISOString(),
+    personalInfo: {
+      name: '',
+      title: '',
+      email: '',
+      phone: '',
+      location: '',
+      about: ''
+    },
+    summary: '',
+    education: [],
+    experience: [],
+    skills: [],
+    projects: [],
+    certifications: []
+  });
+
   const handleFileUpload = async (file: File, field?: string) => {
     if (field === 'personalInfo.profilePhoto') {
       // Handle profile photo upload
       const reader = new FileReader();
       reader.onload = () => {
-        setCollectedData(prev => ({
-          ...prev,
-          personalInfo: {
-            ...prev.personalInfo,
-            profilePhoto: reader.result as string
-          }
-        }));
+        setCollectedData(prev => setNestedValue(prev, field, reader.result as string));
         
         addMessage({
           type: 'user',
@@ -163,6 +197,8 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
       uploadDate: new Date().toISOString()
     };
 
+    console.log('Final data before completion:', finalData);
+
     addMessage({
       type: 'bot',
       content: "Excellent! I have all the information I need. Your resume and portfolio are ready!"
@@ -179,8 +215,13 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     });
 
     if (field) {
+      console.log(`Updating field ${field} with value:`, message);
       // Update collected data
-      setCollectedData(prev => setNestedValue(prev, field, message));
+      setCollectedData(prev => {
+        const updated = setNestedValue(prev, field, message);
+        console.log('Updated collected data:', updated);
+        return updated;
+      });
       
       addMessage({
         type: 'bot',
@@ -246,90 +287,46 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
   };
 
   return (
-    <ResumeDataManager>
-      {({ getNestedValue, setNestedValue, getDefaultResumeData }) => (
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6 text-center">
-            <h1 className="text-3xl font-bold text-navy-900 mb-2">
-              Build Your Resume & Portfolio
-            </h1>
-            <p className="text-navy-600">
-              Let me help you create a professional resume and showcase your talents
-            </p>
-          </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-bold text-navy-900 mb-2">
+          Build Your Resume & Portfolio
+        </h1>
+        <p className="text-navy-600">
+          Let me help you create a professional resume and showcase your talents
+        </p>
+      </div>
 
-          {currentStep === 'upload-summary' && parsedData && (
-            <div className="mb-6">
-              <ParsedDataSummary 
-                data={parsedData}
-                onEditRequest={(fields) => {
-                  setFieldsToEdit(fields);
-                  startDataCollection();
-                }}
-                onAcceptAll={() => {
-                  addMessage({
-                    type: 'user',
-                    content: "No, looks good"
-                  });
-                  handleOptionSelect("No, looks good");
-                }}
-              />
-            </div>
-          )}
-
-          <ChatInterface
-            messages={messages}
-            onSendMessage={handleSendMessage}
-            onFileUpload={handleFileUpload}
-            onOptionSelect={handleOptionSelect}
-            isLoading={isLoading}
-            currentField={getCurrentField()}
-            currentInputType={getCurrentInputType()}
+      {currentStep === 'upload-summary' && parsedData && (
+        <div className="mb-6">
+          <ParsedDataSummary 
+            data={parsedData}
+            onEditRequest={(fields) => {
+              setFieldsToEdit(fields);
+              startDataCollection();
+            }}
+            onAcceptAll={() => {
+              addMessage({
+                type: 'user',
+                content: "No, looks good"
+              });
+              handleOptionSelect("No, looks good");
+            }}
           />
         </div>
       )}
-    </ResumeDataManager>
+
+      <ChatInterface
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        onFileUpload={handleFileUpload}
+        onOptionSelect={handleOptionSelect}
+        isLoading={isLoading}
+        currentField={getCurrentField()}
+        currentInputType={getCurrentInputType()}
+      />
+    </div>
   );
 };
-
-// Helper functions
-const getNestedValue = (obj: any, path: string): any => {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
-};
-
-const setNestedValue = (obj: any, path: string, value: any): any => {
-  const keys = path.split('.');
-  const result = { ...obj };
-  let current = result;
-  
-  for (let i = 0; i < keys.length - 1; i++) {
-    const key = keys[i];
-    if (!current[key]) current[key] = {};
-    current = current[key];
-  }
-  
-  current[keys[keys.length - 1]] = value;
-  return result;
-};
-
-const getDefaultResumeData = (): ResumeData => ({
-  fileName: '',
-  fileData: null,
-  uploadDate: new Date().toISOString(),
-  personalInfo: {
-    name: '',
-    title: '',
-    email: '',
-    phone: '',
-    location: '',
-    about: ''
-  },
-  summary: '',
-  education: [],
-  experience: [],
-  skills: [],
-  projects: [],
-  certifications: []
-});
 
 export default ChatResumeBuilder;
