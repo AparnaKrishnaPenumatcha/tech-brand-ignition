@@ -1,4 +1,5 @@
 
+
 import { processResumeFile } from '@/utils/resumeApiClient';
 import { validateResumeFile } from '@/utils/fileValidation';
 import { ResumeData } from '@/utils/types/resumeTypes';
@@ -70,10 +71,30 @@ export const useFileHandler = ({
       
       setParsedData(resumeData);
       
-      // Check if we got meaningful data
-      const hasContent = resumeData.personalInfo.name !== "Your Name" || 
-                        resumeData.experience.length > 2 || 
-                        resumeData.skills.length > 5;
+      // Enhanced content detection
+      console.log('=== FileHandler: Checking content quality ===');
+      console.log('Name:', resumeData.personalInfo?.name);
+      console.log('Experience count:', resumeData.experience?.length || 0);
+      console.log('Skills count:', resumeData.skills?.length || 0);
+      console.log('Summary length:', resumeData.summary?.length || 0);
+      
+      // Check if we got meaningful data - improved logic
+      const hasRealName = resumeData.personalInfo?.name && 
+                         resumeData.personalInfo.name !== "Your Name" && 
+                         resumeData.personalInfo.name.trim().length > 0;
+      
+      const hasSkills = resumeData.skills && resumeData.skills.length > 3;
+      const hasSummary = resumeData.summary && resumeData.summary.length > 50;
+      const hasExperience = resumeData.experience && resumeData.experience.length > 0;
+      
+      const hasContent = hasRealName || hasSkills || hasSummary || hasExperience;
+      
+      console.log('=== Content Detection Results ===');
+      console.log('Has real name:', hasRealName);
+      console.log('Has skills:', hasSkills);
+      console.log('Has summary:', hasSummary);
+      console.log('Has experience:', hasExperience);
+      console.log('Overall hasContent:', hasContent);
       
       if (hasContent) {
         addMessage({
@@ -111,3 +132,4 @@ export const useFileHandler = ({
     handleFileUpload
   };
 };
+
