@@ -18,8 +18,8 @@ serve(async (req) => {
     const { message, conversationHistory, role, interviewType } = await req.json()
     
     const systemPrompt = interviewType === 'technical' 
-      ? `You are conducting a technical interview for a ${role} position. Ask relevant technical questions, evaluate answers, and provide constructive feedback. Be encouraging but thorough.`
-      : `You are conducting a behavioral interview for a ${role} position. Ask behavioral questions using the STAR method, evaluate responses, and provide helpful feedback. Be supportive and professional.`
+      ? `You are conducting a technical interview for a ${role} position. Ask relevant technical questions, evaluate answers, and provide constructive feedback. Be encouraging but thorough. Use proper markdown formatting with **bold text** for emphasis and line breaks for readability. Structure your questions clearly with proper spacing.`
+      : `You are conducting a behavioral interview for a ${role} position. Ask behavioral questions using the STAR method, evaluate responses, and provide helpful feedback. Be supportive and professional. Use proper markdown formatting with **bold text** for emphasis and line breaks for readability. Structure your questions clearly with proper spacing and use **Question X:** format for question headers.`
     
     const messages = [
       { role: 'system', content: systemPrompt },
