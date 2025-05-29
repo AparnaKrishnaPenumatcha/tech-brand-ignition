@@ -55,13 +55,14 @@ export async function processResumeFile(file: File): Promise<ResumeData> {
   
   if (jsonData) {
     // Process the JSON data from API to match the required schema
+    // The API returns 'personalInfo' not 'personal'
     resumeData = {
       personalInfo: {
-        name: jsonData.personal?.name || "Your Name",
+        name: jsonData.personalInfo?.name || "Your Name",
         title: jsonData.experience?.[0]?.role || "Professional Title",
-        email: jsonData.personal?.email || "email@example.com",
-        phone: jsonData.personal?.phone || "(123) 456-7890",
-        location: jsonData.personal?.location || "City, Country",
+        email: jsonData.personalInfo?.email || "email@example.com",
+        phone: jsonData.personalInfo?.phone || "(123) 456-7890",
+        location: jsonData.personalInfo?.location || "City, Country",
         about: jsonData.summary || "Professional with a passion for creating impactful solutions"
       },
       summary: jsonData.summary || "Experienced professional with expertise in web development and project management.",
