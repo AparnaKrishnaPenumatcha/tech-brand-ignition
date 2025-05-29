@@ -13,26 +13,24 @@ serve(async (req) => {
   }
 
   try {
-    const { fileData, fileName } = await req.json()
+    const { textContent, fileName } = await req.json()
     
-    if (!fileData) {
-      throw new Error('No file data provided')
+    if (!textContent) {
+      throw new Error('No text content provided')
     }
 
     console.log('=== Parse Resume: Starting OpenAI extraction ===')
     console.log('File name:', fileName)
+    console.log('Text content preview:', textContent.substring(0, 200) + '...')
     
     const messages = [
       {
         role: 'system',
-        content: `You are an expert resume parser. Extract structured information from resumes and return it in a specific JSON format. Be thorough and accurate in extracting all relevant information.`
+        content: `You are an expert resume parser. Extract structured information from resume text and return it in a specific JSON format. Be thorough and accurate in extracting all relevant information.`
       },
       {
         role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: `Please extract all information from this resume and return it in the following exact JSON structure:
+        content: `Please extract all information from this resume text and return it in the following exact JSON structure:
 
 {
   "personalInfo": {
@@ -83,15 +81,10 @@ serve(async (req) => {
   ]
 }
 
-Extract ALL information you can find. For skills, assign appropriate categories (Frontend, Backend, Database, Tools, Other) and levels (70-95). If any section is missing, return an empty array for arrays or empty string for strings. Return ONLY the JSON, no additional text.`
-          },
-          {
-            type: 'image_url',
-            image_url: {
-              url: fileData
-            }
-          }
-        ]
+Extract ALL information you can find. For skills, assign appropriate categories (Frontend, Backend, Database, Tools, Other) and levels (70-95). If any section is missing, return an empty array for arrays or empty string for strings. Return ONLY the JSON, no additional text.
+
+Resume Text:
+${textContent}`
       }
     ]
     
@@ -104,7 +97,7 @@ Extract ALL information you can find. For skills, assign appropriate categories 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.1,
         max_tokens: 2000
@@ -140,7 +133,6 @@ Extract ALL information you can find. For skills, assign appropriate categories 
     const resumeData = {
       ...parsedData,
       fileName: fileName || 'uploaded_resume',
-      fileData: fileData,
       uploadDate: new Date().toISOString()
     }
 
