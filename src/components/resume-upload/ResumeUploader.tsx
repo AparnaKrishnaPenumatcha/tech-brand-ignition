@@ -1,112 +1,26 @@
 
-import React, { useState } from 'react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import React from 'react';
 import ResumeOptionSelector from './ResumeOptionSelector';
-import FileUpload from './FileUpload';
-import LoadingButton from './LoadingButton';
-import DemoDataProcessor from './DemoDataProcessor';
-import HybridDataForm from './HybridDataForm';
-import BuildProfile from './BuildProfile';
-import { useResumeUpload } from '@/hooks/use-resume-upload';
-
-type FlowStep = 'selector' | 'upload' | 'manual' | 'hybrid' | 'build';
+import UploadStep from './UploadStep';
+import HybridStep from './HybridStep';
+import BuildStep from './BuildStep';
+import { useUploadFlow } from '@/hooks/use-upload-flow';
 
 const ResumeUploader: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<FlowStep>('selector');
-  const [finalResumeData, setFinalResumeData] = useState<any>(null);
-  
-  const { 
-    file, 
-    setFile, 
-    isLoading, 
+  const {
+    currentStep,
+    finalResumeData,
+    file,
+    setFile,
+    isLoading,
     setIsLoading,
-    showMissingDataForm,
-    incompleteResumeData,
-    handleFileChange, 
-    handleUpload,
-    handleCompleteData
-  } = useResumeUpload();
-
-  // Check if we're likely in a development environment
-  const isDevelopmentEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-  const handleUploadSelect = () => {
-    setCurrentStep('upload');
-  };
-
-  const handleManualSelect = () => {
-    // Create empty resume data structure for manual entry
-    const emptyResumeData = {
-      personalInfo: {
-        name: "",
-        title: "",
-        email: "",
-        phone: "",
-        location: "",
-        about: ""
-      },
-      summary: "",
-      education: [
-        {
-          degree: "",
-          institution: "",
-          year: ""
-        }
-      ],
-      experience: [
-        {
-          title: "",
-          company: "",
-          duration: "",
-          description: ""
-        }
-      ],
-      projects: [
-        {
-          title: "",
-          description: "",
-          tags: []
-        }
-      ],
-      skills: [
-        { name: "", level: 80, category: "Other" }
-      ],
-      certifications: [
-        {
-          name: "",
-          issuer: "",
-          year: ""
-        }
-      ],
-      fileName: "manual_entry",
-      fileData: null,
-      uploadDate: new Date().toISOString()
-    };
-    
-    setFinalResumeData(emptyResumeData);
-    setCurrentStep('hybrid');
-  };
-
-  const handleUploadComplete = async () => {
-    await handleUpload();
-    // After upload processing, show hybrid form with parsed data
-    if (incompleteResumeData) {
-      setFinalResumeData(incompleteResumeData);
-      setCurrentStep('hybrid');
-    }
-  };
-
-  const handleHybridComplete = (data: any) => {
-    setFinalResumeData(data);
-    setCurrentStep('build');
-  };
-
-  const handleBackToSelector = () => {
-    setCurrentStep('selector');
-    setFile(null);
-    setFinalResumeData(null);
-  };
+    handleFileChange,
+    handleUploadSelect,
+    handleManualSelect,
+    handleUploadComplete,
+    handleHybridComplete,
+    handleBackToSelector
+  } = useUploadFlow();
 
   // Main flow rendering
   switch (currentStep) {
@@ -120,73 +34,32 @@ const ResumeUploader: React.FC = () => {
 
     case 'upload':
       return (
-        <div className="space-y-4">
-          <FileUpload 
-            file={file}
-            setFile={setFile}
-            onFileChange={handleFileChange}
-          />
-          
-          {!isDevelopmentEnvironment && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs text-muted-foreground">
-                You're using the hosted app. The resume parser is only available in local development, 
-                so your portfolio will be generated with sample data.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <LoadingButton 
-            onClick={handleUploadComplete} 
-            isLoading={isLoading}
-            disabled={!file}
-          >
-            Process Resume
-          </LoadingButton>
-
-          <DemoDataProcessor 
-            isLoading={isLoading} 
-            setIsLoading={setIsLoading} 
-          />
-          
-          <div className="text-center">
-            <button 
-              onClick={handleBackToSelector}
-              className="text-sm text-navy-500 hover:text-navy-700 underline"
-            >
-              ← Back to options
-            </button>
-          </div>
-        </div>
+        <UploadStep
+          file={file}
+          setFile={setFile}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          onFileChange={handleFileChange}
+          onUploadComplete={handleUploadComplete}
+          onBackToSelector={handleBackToSelector}
+        />
       );
 
     case 'hybrid':
       return (
-        <div className="w-full max-w-none">
-          <HybridDataForm 
-            parsedData={finalResumeData}
-            onComplete={handleHybridComplete}
-          />
-          <div className="text-center mt-4">
-            <button 
-              onClick={handleBackToSelector}
-              className="text-sm text-navy-500 hover:text-navy-700 underline"
-            >
-              ← Start over
-            </button>
-          </div>
-        </div>
+        <HybridStep
+          finalResumeData={finalResumeData}
+          onComplete={handleHybridComplete}
+          onBackToSelector={handleBackToSelector}
+        />
       );
 
     case 'build':
       return (
-        <div className="w-full max-w-none">
-          <BuildProfile 
-            resumeData={finalResumeData}
-            onBack={handleBackToSelector}
-          />
-        </div>
+        <BuildStep
+          finalResumeData={finalResumeData}
+          onBack={handleBackToSelector}
+        />
       );
 
     default:
