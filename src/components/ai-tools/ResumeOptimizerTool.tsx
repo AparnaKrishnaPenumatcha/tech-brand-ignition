@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,20 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const { optimizeResume, loading } = useAITools();
   const { toast } = useToast();
+
+  const parseNestedJson = (text: string) => {
+    // Look for JSON within the text
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch (e) {
+        console.error('Failed to parse nested JSON:', e);
+        return null;
+      }
+    }
+    return null;
+  };
 
   const handleOptimize = async () => {
     console.log('🔍 Starting resume optimization process...');
@@ -56,6 +69,36 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
           console.error('❌ Failed to parse result as JSON:', e);
           console.log('📝 Using raw string result');
         }
+      }
+
+      // Handle nested improvements structure
+      if (parsedResult?.improvements && Array.isArray(parsedResult.improvements)) {
+        const processedImprovements = [];
+        
+        for (const improvement of parsedResult.improvements) {
+          if (improvement && typeof improvement === 'object') {
+            // Check if suggestion contains nested JSON
+            if (improvement.suggestion && typeof improvement.suggestion === 'string') {
+              const nestedData = parseNestedJson(improvement.suggestion);
+              if (nestedData && nestedData.improvements && Array.isArray(nestedData.improvements)) {
+                // Replace with the nested improvements
+                processedImprovements.push(...nestedData.improvements);
+                // Also update other fields if they exist in nested data
+                if (nestedData.overallScore) parsedResult.overallScore = nestedData.overallScore;
+                if (nestedData.strengths) parsedResult.strengths = nestedData.strengths;
+                if (nestedData.keywordsToAdd) parsedResult.keywordsToAdd = nestedData.keywordsToAdd;
+                if (nestedData.summary) parsedResult.summary = nestedData.summary;
+              } else {
+                // Keep original improvement
+                processedImprovements.push(improvement);
+              }
+            } else {
+              processedImprovements.push(improvement);
+            }
+          }
+        }
+        
+        parsedResult.improvements = processedImprovements;
       }
       
       console.log('📋 Final analysis result structure:');
