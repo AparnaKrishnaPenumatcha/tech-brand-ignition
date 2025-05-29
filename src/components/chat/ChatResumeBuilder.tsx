@@ -198,16 +198,27 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     });
 
     try {
+      console.log('=== ChatResumeBuilder: Starting resume processing ===');
       const resumeData = await processResumeFile(file);
+      console.log('=== ChatResumeBuilder: Resume processed successfully ===', resumeData);
+      
       setParsedData(resumeData);
       
       addMessage({
         type: 'bot',
-        content: "Perfect! I've analyzed your resume. Here's what I found:"
+        content: "Perfect! I've analyzed your resume and extracted the following information. Please review and let me know if you'd like to edit anything:"
+      });
+      
+      // Add a detailed summary message showing the extracted data
+      const summaryContent = formatResumeDataSummary(resumeData);
+      addMessage({
+        type: 'bot',
+        content: summaryContent
       });
       
       setCurrentStep('upload-summary');
     } catch (error) {
+      console.error('=== ChatResumeBuilder: Resume processing failed ===', error);
       addMessage({
         type: 'bot',
         content: "I had trouble processing your resume, but don't worry! Let's collect your information manually."
@@ -216,6 +227,57 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatResumeDataSummary = (data: ResumeData): string => {
+    let summary = "Here's what I extracted from your resume:\n\n";
+    
+    // Personal Information
+    if (data.personalInfo) {
+      summary += "**Personal Information:**\n";
+      if (data.personalInfo.name) summary += `• Name: ${data.personalInfo.name}\n`;
+      if (data.personalInfo.title) summary += `• Title: ${data.personalInfo.title}\n`;
+      if (data.personalInfo.email) summary += `• Email: ${data.personalInfo.email}\n`;
+      if (data.personalInfo.phone) summary += `• Phone: ${data.personalInfo.phone}\n`;
+      if (data.personalInfo.location) summary += `• Location: ${data.personalInfo.location}\n`;
+      summary += "\n";
+    }
+
+    // Experience
+    if (data.experience && data.experience.length > 0) {
+      summary += "**Work Experience:**\n";
+      data.experience.slice(0, 3).forEach((exp, index) => {
+        summary += `${index + 1}. ${exp.title} at ${exp.company} (${exp.duration})\n`;
+      });
+      if (data.experience.length > 3) {
+        summary += `... and ${data.experience.length - 3} more positions\n`;
+      }
+      summary += "\n";
+    }
+
+    // Skills
+    if (data.skills && data.skills.length > 0) {
+      summary += "**Skills:**\n";
+      const skillNames = data.skills.slice(0, 10).map(skill => skill.name).join(", ");
+      summary += `${skillNames}`;
+      if (data.skills.length > 10) {
+        summary += ` ... and ${data.skills.length - 10} more skills`;
+      }
+      summary += "\n\n";
+    }
+
+    // Education
+    if (data.education && data.education.length > 0) {
+      summary += "**Education:**\n";
+      data.education.forEach((edu, index) => {
+        summary += `${index + 1}. ${edu.degree} from ${edu.institution} (${edu.year})\n`;
+      });
+      summary += "\n";
+    }
+
+    summary += "Would you like to proceed with this information or make any changes?";
+    
+    return summary;
   };
 
   const startDataCollection = () => {
@@ -342,7 +404,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
       });
       setCurrentQuestionIndex(prev => prev + 1);
       setTimeout(askNextQuestion, 500);
-    } else if (option === "No, looks good") {
+    } else if (option === "No, looks good" || option === "Proceed with this information") {
       addMessage({
         type: 'bot',
         content: "Perfect! Your information looks complete. Let me build your resume and portfolio now."
@@ -391,9 +453,9 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
             onAcceptAll={() => {
               addMessage({
                 type: 'user',
-                content: "No, looks good"
+                content: "Proceed with this information"
               });
-              handleOptionSelect("No, looks good");
+              handleOptionSelect("Proceed with this information");
             }}
           />
         </div>
