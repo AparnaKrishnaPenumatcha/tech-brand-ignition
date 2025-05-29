@@ -16,28 +16,34 @@ const LandingPage: React.FC = () => {
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
 
   useEffect(() => {
-    // Load resume data from localStorage if available
-    const storedData = localStorage.getItem('resumeData');
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData) as ResumeData;
-        setResumeData(parsedData);
-      } catch (error) {
-        console.error("Error parsing resume data:", error);
-      }
-    }
-
-    // Listen for resume data updates
-    const handleResumeUpdate = () => {
+    const loadResumeData = () => {
+      console.log('=== LandingPage: Loading resume data ===');
+      
+      // Load resume data from localStorage if available
       const storedData = localStorage.getItem('resumeData');
+      console.log('Raw data from localStorage:', storedData);
+      
       if (storedData) {
         try {
           const parsedData = JSON.parse(storedData) as ResumeData;
+          console.log('Parsed resume data in LandingPage:', parsedData);
+          console.log('Personal info:', parsedData.personalInfo);
           setResumeData(parsedData);
         } catch (error) {
-          console.error("Error parsing updated resume data:", error);
+          console.error("Error parsing resume data:", error);
         }
+      } else {
+        console.log('No resume data found in localStorage');
       }
+    };
+
+    // Load data on component mount
+    loadResumeData();
+
+    // Listen for resume data updates
+    const handleResumeUpdate = () => {
+      console.log('=== LandingPage: Resume update event received ===');
+      loadResumeData();
     };
 
     window.addEventListener('resumeDataUpdated', handleResumeUpdate);
@@ -46,6 +52,8 @@ const LandingPage: React.FC = () => {
       window.removeEventListener('resumeDataUpdated', handleResumeUpdate);
     };
   }, []);
+
+  console.log('LandingPage render - current resumeData state:', resumeData);
 
   return (
     <div className="min-h-screen overflow-hidden">

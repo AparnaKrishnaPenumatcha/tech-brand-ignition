@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,16 +19,57 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
     const generateProfile = async () => {
       setIsGenerating(true);
       
-      console.log('Saving resume data to localStorage:', resumeData);
+      console.log('=== BuildProfile: Starting data save process ===');
+      console.log('Raw resumeData received:', resumeData);
+      
+      // Ensure we have a complete data structure
+      const completeResumeData: ResumeData = {
+        fileName: resumeData.fileName || 'chat_generated_resume',
+        fileData: resumeData.fileData,
+        uploadDate: resumeData.uploadDate || new Date().toISOString(),
+        personalInfo: {
+          name: resumeData.personalInfo?.name || '',
+          title: resumeData.personalInfo?.title || '',
+          email: resumeData.personalInfo?.email || '',
+          phone: resumeData.personalInfo?.phone || '',
+          location: resumeData.personalInfo?.location || '',
+          about: resumeData.personalInfo?.about || '',
+          profilePhoto: resumeData.personalInfo?.profilePhoto || ''
+        },
+        summary: resumeData.summary || '',
+        education: resumeData.education || [],
+        experience: resumeData.experience || [],
+        skills: resumeData.skills || [],
+        projects: resumeData.projects || [],
+        certifications: resumeData.certifications || []
+      };
+      
+      console.log('Complete structured data to save:', completeResumeData);
       
       // Save to localStorage
-      localStorage.setItem('resumeData', JSON.stringify(resumeData));
+      const dataToSave = JSON.stringify(completeResumeData);
+      console.log('Data being saved to localStorage:', dataToSave);
+      
+      localStorage.setItem('resumeData', dataToSave);
+      
+      // Verify the save worked
+      const savedData = localStorage.getItem('resumeData');
+      console.log('Verification - data retrieved from localStorage:', savedData);
+      
+      if (savedData) {
+        try {
+          const parsedSavedData = JSON.parse(savedData);
+          console.log('Parsed saved data:', parsedSavedData);
+        } catch (error) {
+          console.error('Error parsing saved data:', error);
+        }
+      }
       
       // Simulate processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Create a resume file for download
-      const resumeContent = generateResumeContent(resumeData);
+      const resumeContent = generateResumeContent(completeResumeData);
       const blob = new Blob([resumeContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       
@@ -38,9 +78,10 @@ const BuildProfile: React.FC<BuildProfileProps> = ({ resumeData, onBack }) => {
       setIsComplete(true);
       
       // Trigger update event for other components
+      console.log('Dispatching resumeDataUpdated event');
       window.dispatchEvent(new CustomEvent('resumeDataUpdated'));
       
-      console.log('Profile generation complete, data saved to localStorage');
+      console.log('=== BuildProfile: Data save process complete ===');
     };
 
     generateProfile();
