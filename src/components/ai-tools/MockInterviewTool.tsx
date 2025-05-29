@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAITools } from '@/hooks/useAITools';
 import { ArrowLeft, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { renderMarkdownText } from './utils/markdownUtils';
 
 interface MockInterviewToolProps {
   onBack: () => void;
@@ -184,7 +184,9 @@ const MockInterviewTool: React.FC<MockInterviewToolProps> = ({ onBack }) => {
                     <div className="text-xs font-medium mb-1">
                       {msg.role === 'user' ? 'You' : 'Interviewer'}
                     </div>
-                    <div className="text-sm">{msg.content}</div>
+                    <div className="text-sm leading-relaxed">
+                      {renderMarkdownText(msg.content)}
+                    </div>
                   </div>
                 ))}
               </div>
