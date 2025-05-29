@@ -5,9 +5,8 @@ import { toast } from '@/hooks/use-toast';
 import ChatInterface from './ChatInterface';
 import ParsedDataSummary from './ParsedDataSummary';
 import { ResumeData } from '@/utils/resumeProcessing';
-import { ChatMessage } from './types';
-import { useFlowManager, FlowStep } from './FlowManager';
-import { useDataCollector, FIELD_QUESTIONS } from './DataCollector';
+import { useFlowManager } from './FlowManager';
+import { useDataCollector } from './DataCollector';
 import { useMessageHandler } from './MessageHandler';
 import { useFileHandler } from './FileHandler';
 

@@ -1,10 +1,10 @@
 
-import React from 'react';
+import { useState, useCallback } from 'react';
 import { ChatMessage } from './types';
 import { ResumeData } from '@/utils/resumeProcessing';
 
 export const useMessageHandler = () => {
-  const [messages, setMessages] = React.useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       type: 'bot',
@@ -14,7 +14,7 @@ export const useMessageHandler = () => {
     }
   ]);
 
-  const addMessage = React.useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+  const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     setMessages(prev => [...prev, {
       ...message,
       id: Date.now().toString(),

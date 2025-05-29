@@ -1,23 +1,14 @@
 
-import React from 'react';
+import { useState } from 'react';
 import { ResumeData } from '@/utils/resumeProcessing';
 
 export type FlowStep = 'welcome' | 'upload-summary' | 'data-collection' | 'complete';
 
-interface FlowManagerProps {
-  currentStep: FlowStep;
-  setCurrentStep: (step: FlowStep) => void;
-  parsedData: Partial<ResumeData> | null;
-  collectedData: Partial<ResumeData>;
-  fieldsToEdit: string[];
-  onComplete: (data: ResumeData) => void;
-}
-
 export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
-  const [currentStep, setCurrentStep] = React.useState<FlowStep>('welcome');
-  const [parsedData, setParsedData] = React.useState<Partial<ResumeData> | null>(null);
-  const [collectedData, setCollectedData] = React.useState<Partial<ResumeData>>({});
-  const [fieldsToEdit, setFieldsToEdit] = React.useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState<FlowStep>('welcome');
+  const [parsedData, setParsedData] = useState<Partial<ResumeData> | null>(null);
+  const [collectedData, setCollectedData] = useState<Partial<ResumeData>>({});
+  const [fieldsToEdit, setFieldsToEdit] = useState<string[]>([]);
 
   const getDefaultResumeData = (): ResumeData => ({
     fileName: 'chat_generated_resume',
@@ -42,36 +33,6 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
     leadership: '',
     testimonials: []
   });
-
-  const completeDataCollection = () => {
-    console.log('=== FlowManager: Starting data completion ===');
-    console.log('Parsed data:', parsedData);
-    console.log('Collected data:', collectedData);
-
-    const baseData = getDefaultResumeData();
-    const mergedData = {
-      ...baseData,
-      ...parsedData,
-      ...collectedData
-    };
-
-    mergedData.personalInfo = {
-      ...baseData.personalInfo,
-      ...parsedData?.personalInfo,
-      ...collectedData?.personalInfo
-    };
-
-    ['certifications', 'projects', 'experience', 'skills', 'testimonials'].forEach(field => {
-      const textValue = getNestedValue(collectedData, field);
-      if (typeof textValue === 'string' && textValue.trim()) {
-        mergedData[field as keyof ResumeData] = parseListData(textValue, field) as any;
-      }
-    });
-
-    console.log('Final merged data:', mergedData);
-    setCurrentStep('complete');
-    onComplete(mergedData);
-  };
 
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((current, key) => current?.[key], obj);
@@ -135,6 +96,36 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
       default:
         return lines;
     }
+  };
+
+  const completeDataCollection = () => {
+    console.log('=== FlowManager: Starting data completion ===');
+    console.log('Parsed data:', parsedData);
+    console.log('Collected data:', collectedData);
+
+    const baseData = getDefaultResumeData();
+    const mergedData = {
+      ...baseData,
+      ...parsedData,
+      ...collectedData
+    };
+
+    mergedData.personalInfo = {
+      ...baseData.personalInfo,
+      ...parsedData?.personalInfo,
+      ...collectedData?.personalInfo
+    };
+
+    ['certifications', 'projects', 'experience', 'skills', 'testimonials'].forEach(field => {
+      const textValue = getNestedValue(collectedData, field);
+      if (typeof textValue === 'string' && textValue.trim()) {
+        mergedData[field as keyof ResumeData] = parseListData(textValue, field) as any;
+      }
+    });
+
+    console.log('Final merged data:', mergedData);
+    setCurrentStep('complete');
+    onComplete(mergedData);
   };
 
   return {

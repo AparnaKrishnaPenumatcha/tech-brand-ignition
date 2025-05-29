@@ -1,4 +1,5 @@
-import React from 'react';
+
+import { useState } from 'react';
 import { ResumeData } from '@/utils/resumeProcessing';
 import { FieldQuestion } from './types';
 
@@ -20,23 +21,9 @@ export const FIELD_QUESTIONS: FieldQuestion[] = [
   { field: 'testimonials', question: "Provide up to 3 short quotes from mentors or colleagues, with names and roles (format: Quote - Name - Role).", inputType: 'textarea', required: false, category: 'Testimonials' },
 ];
 
-interface DataCollectorProps {
-  currentQuestionIndex: number;
-  setCurrentQuestionIndex: (index: number | ((prev: number) => number)) => void;
-  parsedData: Partial<ResumeData> | null;
-  collectedData: Partial<ResumeData>;
-  setCollectedData: (data: Partial<ResumeData> | ((prev: Partial<ResumeData>) => Partial<ResumeData>)) => void;
-  fieldsToEdit: string[];
-  ignoredFields: Set<string>;
-  setIgnoredFields: (fields: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
-  onQuestionComplete: () => void;
-  onDataComplete: () => void;
-  addMessage: (message: any) => void;
-}
-
 export const useDataCollector = () => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
-  const [ignoredFields, setIgnoredFields] = React.useState<Set<string>>(new Set());
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [ignoredFields, setIgnoredFields] = useState<Set<string>>(new Set());
 
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((current, key) => current?.[key], obj);

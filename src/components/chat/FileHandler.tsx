@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { processResumeFile, ResumeData } from '@/utils/resumeProcessing';
 import { validateResumeFile } from '@/utils/fileValidation';
 
