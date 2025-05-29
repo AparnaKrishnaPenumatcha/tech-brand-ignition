@@ -12,6 +12,10 @@ import {
   Sparkles,
   Brain
 } from 'lucide-react';
+import CoverLetterTool from '@/components/ai-tools/CoverLetterTool';
+import ResumeOptimizerTool from '@/components/ai-tools/ResumeOptimizerTool';
+import MockInterviewTool from '@/components/ai-tools/MockInterviewTool';
+import CareerCoachingTool from '@/components/ai-tools/CareerCoachingTool';
 
 type ToolType = 'cover-letter' | 'optimizer' | 'interview' | 'coaching' | null;
 
@@ -53,35 +57,28 @@ const CareerTools: React.FC = () => {
     }
   ];
 
+  const renderTool = () => {
+    switch (selectedTool) {
+      case 'cover-letter':
+        return <CoverLetterTool onBack={() => setSelectedTool(null)} />;
+      case 'optimizer':
+        return <ResumeOptimizerTool onBack={() => setSelectedTool(null)} />;
+      case 'interview':
+        return <MockInterviewTool onBack={() => setSelectedTool(null)} />;
+      case 'coaching':
+        return <CareerCoachingTool onBack={() => setSelectedTool(null)} />;
+      default:
+        return null;
+    }
+  };
+
   if (selectedTool) {
     return (
       <div className="min-h-screen bg-navy-50">
         <GlobalNavigation />
         <main className="py-12">
           <div className="container-custom max-w-4xl">
-            <div className="mb-6">
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedTool(null)}
-                className="mb-4"
-              >
-                ← Back to Career Tools
-              </Button>
-              <h1 className="text-3xl font-bold text-navy-900">
-                {tools.find(t => t.id === selectedTool)?.title}
-              </h1>
-            </div>
-            
-            <Card>
-              <CardContent className="p-8">
-                <div className="text-center text-navy-600">
-                  <Sparkles className="w-12 h-12 mx-auto mb-4 text-electric-500" />
-                  <h3 className="text-xl font-semibold mb-2">AI Tool Coming Soon</h3>
-                  <p>This advanced AI-powered feature is currently in development.</p>
-                  <p className="text-sm mt-2">It will integrate with OpenAI's latest models for optimal results.</p>
-                </div>
-              </CardContent>
-            </Card>
+            {renderTool()}
           </div>
         </main>
       </div>
