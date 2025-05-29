@@ -18,11 +18,24 @@ export const useMessageHandler = () => {
   const [messageCounter, setMessageCounter] = useState(2);
 
   const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    setMessages(prev => [...prev, {
+    const newMessage = {
       ...message,
-      id: `msg-${messageCounter}-${Date.now()}`,
+      id: `msg-${messageCounter}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date()
-    }]);
+    };
+    
+    console.log('=== MessageHandler: Adding message with ID ===', newMessage.id);
+    
+    setMessages(prev => {
+      // Check for duplicate IDs to prevent React warnings
+      const isDuplicate = prev.some(m => m.id === newMessage.id);
+      if (isDuplicate) {
+        console.warn('=== MessageHandler: Duplicate message ID detected, regenerating ===');
+        newMessage.id = `msg-${messageCounter}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-retry`;
+      }
+      return [...prev, newMessage];
+    });
+    
     setMessageCounter(prev => prev + 1);
   }, [messageCounter]);
 

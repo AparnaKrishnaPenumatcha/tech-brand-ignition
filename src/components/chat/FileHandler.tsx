@@ -97,19 +97,27 @@ export const useFileHandler = ({
       console.log('Overall hasContent:', hasContent);
       
       if (hasContent) {
+        console.log('=== FileHandler: Content detected, showing summary ===');
         addMessage({
           type: 'bot',
           content: "Excellent! I've successfully analyzed your resume using our external parser and extracted comprehensive information. Here's what I found:"
         });
         
         const summaryContent = formatResumeDataSummary(resumeData);
-        addMessage({
-          type: 'bot',
-          content: summaryContent
-        });
+        console.log('=== FileHandler: Generated summary content ===', summaryContent);
         
+        // Add a small delay to ensure proper message sequencing
+        setTimeout(() => {
+          addMessage({
+            type: 'bot',
+            content: summaryContent
+          });
+        }, 100);
+        
+        console.log('=== FileHandler: Setting current step to upload-summary ===');
         setCurrentStep('upload-summary');
       } else {
+        console.log('=== FileHandler: No meaningful content detected, starting data collection ===');
         addMessage({
           type: 'bot',
           content: "I had some difficulty extracting specific information from your resume. No worries - let's collect your information step by step!"
