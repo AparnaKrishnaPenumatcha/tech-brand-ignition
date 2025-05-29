@@ -10,6 +10,7 @@ export interface ResumeData {
     phone: string;
     location: string;
     about: string;
+    profilePhoto?: string;
   };
   education: Array<{
     degree: string;

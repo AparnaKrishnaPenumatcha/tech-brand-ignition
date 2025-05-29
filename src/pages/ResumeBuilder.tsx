@@ -1,11 +1,27 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import ResumeUploader from '@/components/resume-upload/ResumeUploader';
+import ChatResumeBuilder from '@/components/chat/ChatResumeBuilder';
+import BuildProfile from '@/components/resume-upload/BuildProfile';
+import { ResumeData } from '@/utils/resumeProcessing';
 
 const ResumeBuilder: React.FC = () => {
+  const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  const [showBuildProfile, setShowBuildProfile] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChatComplete = (data: ResumeData) => {
+    setResumeData(data);
+    setShowBuildProfile(true);
+  };
+
+  const handleBackToChat = () => {
+    setShowBuildProfile(false);
+    setResumeData(null);
+  };
+
   return (
     <div className="min-h-screen bg-navy-50">
       {/* Header */}
@@ -29,16 +45,14 @@ const ResumeBuilder: React.FC = () => {
       {/* Main Content */}
       <main className="py-12">
         <div className="container-custom max-w-4xl">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-navy-900 mb-4">
-              Build Your Resume
-            </h1>
-            <p className="text-navy-600 text-lg">
-              Create a professional resume by uploading your existing one or entering your information manually
-            </p>
-          </div>
-          
-          <ResumeUploader />
+          {showBuildProfile && resumeData ? (
+            <BuildProfile 
+              resumeData={resumeData}
+              onBack={handleBackToChat}
+            />
+          ) : (
+            <ChatResumeBuilder onComplete={handleChatComplete} />
+          )}
         </div>
       </main>
     </div>

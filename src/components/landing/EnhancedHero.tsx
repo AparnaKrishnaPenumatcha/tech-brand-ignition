@@ -14,6 +14,7 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ resumeData }) => {
   
   const name = resumeData?.personalInfo?.name || "Your Name";
   const title = resumeData?.personalInfo?.title || "Future Leader in Tech & Innovation";
+  const profilePhoto = resumeData?.personalInfo?.profilePhoto;
   
   return (
     <section id="home" className="py-24 md:py-32 bg-white relative overflow-hidden">
@@ -26,7 +27,7 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ resumeData }) => {
                 Hello, I'm <span className="text-electric-500">{name}</span>
               </h1>
               <h2 className="text-2xl md:text-3xl text-navy-700 mt-4">
-                {title}
+                Future Leader in Tech & Innovation
               </h2>
             </div>
             
@@ -54,13 +55,20 @@ const EnhancedHero: React.FC<EnhancedHeroProps> = ({ resumeData }) => {
             )}
           </div>
           
-          {/* Hero Image */}
+          {/* Hero Image / Profile Photo */}
           <div className="w-full md:w-5/12 flex justify-center md:justify-end">
             <div className="relative w-64 h-64 md:w-80 md:h-80">
-              {/* Placeholder image */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-navy-100 to-navy-200 overflow-hidden flex items-center justify-center">
-                <span className="text-navy-500 font-medium">Profile Image</span>
-              </div>
+              {profilePhoto ? (
+                <img
+                  src={profilePhoto}
+                  alt={`${name} - Profile Photo`}
+                  className="absolute inset-0 w-full h-full rounded-full object-cover shadow-lg"
+                />
+              ) : (
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-navy-100 to-navy-200 overflow-hidden flex items-center justify-center">
+                  <span className="text-navy-500 font-medium">Profile Image</span>
+                </div>
+              )}
               {/* Shape decorations */}
               <div className="absolute -z-10 w-16 h-16 bg-electric-500 rounded-lg -bottom-4 -left-4 md:-bottom-6 md:-left-6"></div>
               <div className="absolute -z-10 w-12 h-12 bg-teal-600 rounded-full -top-2 -right-2 md:-top-4 md:-right-4"></div>
