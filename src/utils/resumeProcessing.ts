@@ -1,3 +1,4 @@
+
 export interface ResumeData {
   fileName: string;
   fileData: string | ArrayBuffer | null;
@@ -10,6 +11,7 @@ export interface ResumeData {
     location: string;
     about: string;
     profilePhoto?: string;
+    linkedin?: string;
   };
   education: Array<{
     degree: string;
@@ -42,6 +44,12 @@ export interface ResumeData {
     year: string;
   }>;
   summary?: string;
+  leadership?: string;
+  testimonials?: Array<{
+    quote: string;
+    name: string;
+    role: string;
+  }>;
 }
 
 interface RawSkill { name: string; }
