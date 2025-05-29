@@ -14,10 +14,16 @@ export const renderMarkdownText = (text: string) => {
 };
 
 export const parseImprovements = (improvements: any) => {
+  // Early return for null/undefined
+  if (!improvements) {
+    console.log('⚠️ No improvements data provided');
+    return [];
+  }
+
   console.log('🔍 parseImprovements input:', improvements);
   console.log('🔍 Input type:', typeof improvements);
   
-  // If improvements is already a properly formatted array, return it
+  // If improvements is already a properly formatted array, return it immediately
   if (Array.isArray(improvements)) {
     const validImprovements = improvements.filter(item => 
       item && typeof item === 'object' && item.area && item.suggestion
@@ -26,74 +32,42 @@ export const parseImprovements = (improvements: any) => {
     return validImprovements;
   }
   
-  // If it's a string that contains JSON, try to extract and parse it
+  // If it's a string, try to extract JSON from it
   if (typeof improvements === 'string') {
-    console.log('📝 Processing string input:', improvements.substring(0, 200) + '...');
+    console.log('📝 Processing string input');
     
     try {
-      // First, try to parse the entire string as JSON
-      let parsed;
-      try {
-        parsed = JSON.parse(improvements);
-        console.log('✅ Successfully parsed entire string as JSON:', parsed);
-      } catch (e) {
-        // If that fails, look for JSON content within the string
-        console.log('⚠️ Direct parse failed, looking for JSON within string');
-        
-        // Look for JSON array pattern
-        const arrayMatch = improvements.match(/\[[\s\S]*\]/);
-        if (arrayMatch) {
-          console.log('🎯 Found array pattern:', arrayMatch[0].substring(0, 100) + '...');
-          parsed = JSON.parse(arrayMatch[0]);
-        } else {
-          // Look for JSON object pattern
-          const objectMatch = improvements.match(/\{[\s\S]*\}/);
-          if (objectMatch) {
-            console.log('🎯 Found object pattern:', objectMatch[0].substring(0, 100) + '...');
-            parsed = JSON.parse(objectMatch[0]);
-          } else {
-            throw new Error('No JSON pattern found');
-          }
-        }
-      }
-      
-      // Handle the parsed result
-      if (Array.isArray(parsed)) {
-        console.log('✅ Parsed result is array:', parsed);
+      // Look for JSON content within the string - check for the improvements array specifically
+      const improvementsMatch = improvements.match(/"improvements"\s*:\s*\[[\s\S]*?\]/);
+      if (improvementsMatch) {
+        // Extract just the improvements array value
+        const improvementsArrayStr = improvementsMatch[0].replace(/"improvements"\s*:\s*/, '');
+        const parsed = JSON.parse(improvementsArrayStr);
+        console.log('✅ Successfully extracted improvements array:', parsed);
         return parsed.filter(item => 
           item && typeof item === 'object' && item.area && item.suggestion
         );
       }
+
+      // Fallback: try to parse the entire string as JSON
+      const parsed = JSON.parse(improvements);
+      if (parsed.improvements && Array.isArray(parsed.improvements)) {
+        console.log('✅ Found improvements in parsed object:', parsed.improvements);
+        return parsed.improvements.filter(item => 
+          item && typeof item === 'object' && item.area && item.suggestion
+        );
+      }
       
-      // If parsed result is an object, check for improvements property
-      if (parsed && typeof parsed === 'object') {
-        if (parsed.improvements && Array.isArray(parsed.improvements)) {
-          console.log('✅ Found improvements property in object:', parsed.improvements);
-          return parsed.improvements.filter(item => 
-            item && typeof item === 'object' && item.area && item.suggestion
-          );
-        }
-        
-        // If it's an object but not an array, try to convert it to improvement format
-        console.log('🔄 Converting object to improvements format');
-        const converted = Object.entries(parsed)
-          .filter(([key, value]) => key !== 'overallScore' && key !== 'summary' && key !== 'strengths' && key !== 'keywordsToAdd')
-          .map(([key, value]) => ({
-            area: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-            suggestion: typeof value === 'string' ? value : JSON.stringify(value),
-            impact: "Improved resume effectiveness"
-          }));
-        
-        if (converted.length > 0) {
-          console.log('✅ Successfully converted object:', converted);
-          return converted;
-        }
+      // If it's an array at the root level
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => 
+          item && typeof item === 'object' && item.area && item.suggestion
+        );
       }
     } catch (e) {
       console.error('❌ Failed to parse improvements JSON:', e);
-      console.log('📝 Using fallback for string content');
       
-      // If all parsing fails, create a single improvement from the string
+      // Create a single improvement from the string content
       return [{
         area: "General Improvement",
         suggestion: improvements,
@@ -102,31 +76,16 @@ export const parseImprovements = (improvements: any) => {
     }
   }
   
-  // If it's an object but not an array, try to extract meaningful data
+  // If it's an object, try to extract improvements
   if (typeof improvements === 'object' && improvements !== null) {
-    console.log('🔍 Processing object format:', improvements);
+    console.log('🔍 Processing object format');
     
-    // Check if it has an improvements property
+    // Check for improvements property
     if (improvements.improvements && Array.isArray(improvements.improvements)) {
       console.log('✅ Found improvements property:', improvements.improvements);
       return improvements.improvements.filter(item => 
         item && typeof item === 'object' && item.area && item.suggestion
       );
-    }
-    
-    // Convert object entries to improvement format, excluding known metadata fields
-    const excludedKeys = ['overallScore', 'summary', 'strengths', 'keywordsToAdd'];
-    const converted = Object.entries(improvements)
-      .filter(([key]) => !excludedKeys.includes(key))
-      .map(([key, value]) => ({
-        area: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
-        suggestion: typeof value === 'string' ? value : JSON.stringify(value),
-        impact: "Improved resume effectiveness"
-      }));
-    
-    if (converted.length > 0) {
-      console.log('🔄 Converted object to improvements:', converted);
-      return converted;
     }
   }
   

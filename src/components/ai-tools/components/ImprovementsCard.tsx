@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Lightbulb, Target, AlertTriangle } from 'lucide-react';
 import { parseImprovements, renderMarkdownText } from '../utils/textUtils';
@@ -9,11 +9,14 @@ interface ImprovementsCardProps {
   improvements: Improvement[] | any;
 }
 
-const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => {
+const ImprovementsCard: React.FC<ImprovementsCardProps> = React.memo(({ improvements }) => {
   console.log('🔧 ImprovementsCard raw input:', improvements);
-  console.log('🔧 Input type:', typeof improvements);
   
-  const parsedImprovements = parseImprovements(improvements);
+  const parsedImprovements = useMemo(() => {
+    console.log('🔄 Memoizing parseImprovements call');
+    return parseImprovements(improvements);
+  }, [improvements]);
+
   console.log('📝 ImprovementsCard final parsed data:', parsedImprovements);
   console.log('📝 Parsed improvements count:', parsedImprovements?.length || 0);
 
@@ -84,7 +87,7 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
             console.log(`📋 Rendering improvement ${index + 1}:`, improvement);
             
             return (
-              <div key={index} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+              <div key={`improvement-${index}-${improvement.area || 'unknown'}`} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
                 {/* Priority Header */}
                 <div className="bg-gradient-to-r from-gray-50 to-orange-50 px-6 py-4 border-b border-gray-200">
                   <div className="flex items-center justify-between">
@@ -168,6 +171,8 @@ const ImprovementsCard: React.FC<ImprovementsCardProps> = ({ improvements }) => 
       </CardContent>
     </Card>
   );
-};
+});
+
+ImprovementsCard.displayName = 'ImprovementsCard';
 
 export default ImprovementsCard;
