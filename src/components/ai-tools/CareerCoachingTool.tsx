@@ -8,6 +8,7 @@ import { useAITools } from '@/hooks/useAITools';
 import { ResumeData } from '@/utils/resumeProcessing';
 import { ArrowLeft, TrendingUp, Target, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { renderMarkdownText } from './utils/markdownUtils';
 
 interface CareerCoachingToolProps {
   onBack: () => void;
@@ -97,7 +98,7 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
               if (trimmedLine.startsWith('####')) {
                 return (
                   <h4 key={lineIndex} className="font-semibold text-navy-800 mt-4 mb-2 text-base">
-                    {trimmedLine.replace(/^#+\s*/, '')}
+                    {renderMarkdownText(trimmedLine.replace(/^#+\s*/, ''))}
                   </h4>
                 );
               }
@@ -107,7 +108,9 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
                 return (
                   <div key={lineIndex} className="flex items-start gap-2 ml-4">
                     <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <span className="text-navy-700">{trimmedLine.substring(1).trim()}</span>
+                    <span className="text-navy-700">
+                      {renderMarkdownText(trimmedLine.substring(1).trim())}
+                    </span>
                   </div>
                 );
               }
@@ -119,7 +122,9 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
                     <span className="text-orange-500 font-medium text-sm mt-0.5 flex-shrink-0">
                       {trimmedLine.match(/^\d+\./)?.[0]}
                     </span>
-                    <span className="text-navy-700">{trimmedLine.replace(/^\d+\.\s*/, '')}</span>
+                    <span className="text-navy-700">
+                      {renderMarkdownText(trimmedLine.replace(/^\d+\.\s*/, ''))}
+                    </span>
                   </div>
                 );
               }
@@ -128,7 +133,9 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
               if (/^Phase\s+\d+:/i.test(trimmedLine)) {
                 return (
                   <div key={lineIndex} className="bg-electric-50 p-3 rounded-lg border-l-4 border-electric-500 mt-3">
-                    <h5 className="font-semibold text-electric-700">{trimmedLine}</h5>
+                    <h5 className="font-semibold text-electric-700">
+                      {renderMarkdownText(trimmedLine)}
+                    </h5>
                   </div>
                 );
               }
@@ -137,7 +144,7 @@ const CareerCoachingTool: React.FC<CareerCoachingToolProps> = ({ onBack }) => {
               if (trimmedLine.length > 0) {
                 return (
                   <p key={lineIndex} className="text-navy-700 leading-relaxed">
-                    {trimmedLine}
+                    {renderMarkdownText(trimmedLine)}
                   </p>
                 );
               }
