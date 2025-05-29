@@ -18,6 +18,16 @@ serve(async (req) => {
     // Build a comprehensive candidate profile from resume data
     const candidateProfile = buildCandidateProfile(resumeData);
     
+    // Extract personal info for the header
+    const personalInfo = resumeData?.personalInfo || {};
+    const name = personalInfo.name || 'Your Name';
+    const email = personalInfo.email || 'your.email@example.com';
+    const phone = personalInfo.phone || '';
+    const location = personalInfo.location || '';
+    
+    // Build the header with actual personal information
+    const headerInfo = buildCoverLetterHeader(personalInfo);
+    
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -29,11 +39,35 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional cover letter writer. Generate personalized, compelling cover letters that highlight relevant experience and skills for the specific job. Use specific details from the candidate\'s background to create a connection with the job requirements. Write in a professional but engaging tone.'
+            content: `You are a professional cover letter writer. Generate personalized, compelling cover letters that highlight relevant experience and skills for the specific job. Use specific details from the candidate's background to create a connection with the job requirements. Write in a professional but engaging tone.
+
+IMPORTANT FORMATTING RULES:
+- Start with the candidate's actual contact information (name: ${name}, email: ${email}, phone: ${phone}, location: ${location})
+- Do NOT use placeholder text like [Company's Name], [Your Address], [Hiring Manager's Name], etc.
+- Use the actual company names from their experience when relevant
+- Reference specific projects, skills, and achievements from their background
+- Make the letter feel genuine and personalized, not templated`
           },
           {
             role: 'user',
-            content: `Generate a professional cover letter for this job posting:\n\n${jobDescription}\n\nBased on this candidate's detailed profile:\n${candidateProfile}\n\nPlease create a compelling cover letter that:\n1. Addresses the specific job requirements\n2. Highlights relevant experience from their background\n3. Mentions specific companies, projects, or achievements when relevant\n4. Shows enthusiasm for the role and company\n5. Includes a professional greeting and closing`
+            content: `${headerInfo}
+
+Generate a professional cover letter for this job posting:
+
+${jobDescription}
+
+Based on this candidate's detailed profile:
+${candidateProfile}
+
+Please create a compelling cover letter that:
+1. Uses the candidate's actual personal information in the header (no placeholders like [Your Address])
+2. Addresses the specific job requirements using real examples from their background
+3. Mentions specific companies, projects, or achievements when relevant
+4. Shows enthusiasm for the role and company
+5. Uses a professional greeting (Dear Hiring Manager is fine if company name not specified)
+6. Does not include placeholder text - use actual data or omit sections if data is missing
+
+Format the letter professionally with proper spacing and structure.`
           }
         ],
         temperature: 0.7,
@@ -62,6 +96,34 @@ serve(async (req) => {
   }
 })
 
+function buildCoverLetterHeader(personalInfo: any): string {
+  let header = '';
+  
+  if (personalInfo.name) {
+    header += `${personalInfo.name}\n`;
+  }
+  
+  if (personalInfo.location) {
+    header += `${personalInfo.location}\n`;
+  }
+  
+  if (personalInfo.email) {
+    header += `${personalInfo.email}\n`;
+  }
+  
+  if (personalInfo.phone) {
+    header += `${personalInfo.phone}\n`;
+  }
+  
+  if (personalInfo.linkedin) {
+    header += `LinkedIn: ${personalInfo.linkedin}\n`;
+  }
+  
+  header += `\nDate: ${new Date().toLocaleDateString()}\n\n`;
+  
+  return header;
+}
+
 function buildCandidateProfile(resumeData: any): string {
   if (!resumeData) {
     return "No resume data available";
@@ -71,11 +133,14 @@ function buildCandidateProfile(resumeData: any): string {
   
   // Personal Information
   if (resumeData.personalInfo) {
-    const { name, title, email, phone, location, about } = resumeData.personalInfo;
+    const { name, title, email, phone, location, about, linkedin } = resumeData.personalInfo;
     profile += `PERSONAL INFORMATION:\n`;
     if (name) profile += `Name: ${name}\n`;
     if (title) profile += `Current Title: ${title}\n`;
     if (location) profile += `Location: ${location}\n`;
+    if (email) profile += `Email: ${email}\n`;
+    if (phone) profile += `Phone: ${phone}\n`;
+    if (linkedin) profile += `LinkedIn: ${linkedin}\n`;
     if (about) profile += `About: ${about}\n`;
     profile += `\n`;
   }
@@ -89,7 +154,9 @@ function buildCandidateProfile(resumeData: any): string {
   if (resumeData.experience && resumeData.experience.length > 0) {
     profile += `WORK EXPERIENCE:\n`;
     resumeData.experience.forEach((exp: any, index: number) => {
-      profile += `${index + 1}. ${exp.title || 'Position'} at ${exp.company || 'Company'}\n`;
+      profile += `${index + 1}. ${exp.title || 'Position'}`;
+      if (exp.company) profile += ` at ${exp.company}`;
+      profile += `\n`;
       if (exp.duration) profile += `   Duration: ${exp.duration}\n`;
       if (exp.description) profile += `   Description: ${exp.description}\n`;
       profile += `\n`;
