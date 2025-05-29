@@ -1,7 +1,8 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import ChatInterface, { ChatMessage } from './ChatInterface';
+import ChatInterface from './ChatInterface';
 import ParsedDataSummary from './ParsedDataSummary';
 import ResumeDataManager from './ResumeDataManager';
 import { processResumeFile, ResumeData } from '@/utils/resumeProcessing';
