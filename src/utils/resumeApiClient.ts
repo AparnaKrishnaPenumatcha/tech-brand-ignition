@@ -3,23 +3,11 @@ import { toast } from '@/hooks/use-toast';
 import { ResumeData, processSkills, processExperience, processProjects } from './resumeProcessing';
 
 /**
- * Attempts to parse a resume using the backend API
+ * Attempts to parse a resume using the external API
  * @param formData FormData containing the resume file
  * @returns Parsed resume data or null if parsing failed
  */
 export async function parseResumeWithApi(formData: FormData): Promise<any | null> {
-  // Check if we're likely in a development environment
-  const isDevelopmentEnvironment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  
-  // If we're not in development, show a toast explaining why we're using fallback data
-  if (!isDevelopmentEnvironment) {
-    toast({
-      title: "Using sample data",
-      description: "The resume parser service is only available in local development. Using fallback data instead.",
-    });
-    return null;
-  }
-  
   try {
     const res = await fetch('https://apenumat-100xminicapstoneapi.hf.space/parse-resume', {
       method: 'POST',
@@ -31,15 +19,17 @@ export async function parseResumeWithApi(formData: FormData): Promise<any | null
     });
     
     if (res.ok) {
-      return await res.json();
+      const jsonData = await res.json();
+      console.log('External API response:', jsonData);
+      return jsonData;
     } else {
       throw new Error(`Server responded with status: ${res.status}`);
     }
   } catch (error) {
-    console.error("Backend service unavailable:", error);
+    console.error("External API unavailable:", error);
     toast({
       title: "Parser unavailable",
-      description: "Resume parser service is not running. Using fallback data instead.",
+      description: "Resume parser service is not responding. Using fallback data instead.",
     });
     return null;
   }
@@ -54,7 +44,7 @@ export async function processResumeFile(file: File): Promise<ResumeData> {
   const formData = new FormData();
   formData.append('file', file);
   
-  // First try to get structured data from the backend
+  // Try to get structured data from the external API
   const jsonData = await parseResumeWithApi(formData);
   
   // Prepare resume data (either from API or fallback)

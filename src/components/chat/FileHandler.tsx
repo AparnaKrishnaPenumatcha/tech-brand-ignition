@@ -1,5 +1,5 @@
 
-import { processResumeFile, ResumeData } from '@/utils/resumeProcessing';
+import { processResumeFile, ResumeData } from '@/utils/resumeApiClient';
 import { validateResumeFile } from '@/utils/fileValidation';
 
 interface FileHandlerProps {
@@ -47,7 +47,7 @@ export const useFileHandler = ({
       return;
     }
 
-    // Handle resume file upload with OpenAI processing
+    // Handle resume file upload with external API processing
     if (!validateResumeFile(file)) return;
     
     setIsLoading(true);
@@ -58,25 +58,25 @@ export const useFileHandler = ({
     
     addMessage({
       type: 'bot',
-      content: "Perfect! I'm now using AI to intelligently extract all information from your resume. This might take a moment..."
+      content: "Perfect! I'm now processing your resume using our external parser. This might take a moment..."
     });
 
     try {
-      console.log('=== FileHandler: Starting OpenAI resume processing ===');
+      console.log('=== FileHandler: Starting external API resume processing ===');
       const resumeData = await processResumeFile(file);
-      console.log('=== FileHandler: OpenAI processing complete ===', resumeData);
+      console.log('=== FileHandler: External API processing complete ===', resumeData);
       
       setParsedData(resumeData);
       
       // Check if we got meaningful data
-      const hasContent = resumeData.personalInfo.name || 
-                        resumeData.experience.length > 0 || 
-                        resumeData.skills.length > 0;
+      const hasContent = resumeData.personalInfo.name !== "Your Name" || 
+                        resumeData.experience.length > 2 || 
+                        resumeData.skills.length > 5;
       
       if (hasContent) {
         addMessage({
           type: 'bot',
-          content: "Excellent! I've successfully analyzed your resume using AI and extracted comprehensive information. Here's what I found:"
+          content: "Excellent! I've successfully analyzed your resume using our external parser and extracted comprehensive information. Here's what I found:"
         });
         
         const summaryContent = formatResumeDataSummary(resumeData);
@@ -89,15 +89,15 @@ export const useFileHandler = ({
       } else {
         addMessage({
           type: 'bot',
-          content: "I had some difficulty extracting information from your resume. No worries - let's collect your information step by step!"
+          content: "I had some difficulty extracting specific information from your resume. No worries - let's collect your information step by step!"
         });
         startDataCollection();
       }
     } catch (error) {
-      console.error('=== FileHandler: OpenAI processing failed ===', error);
+      console.error('=== FileHandler: External API processing failed ===', error);
       addMessage({
         type: 'bot',
-        content: "I encountered an issue processing your resume with AI, but that's okay! Let's gather your information manually to ensure we capture everything perfectly."
+        content: "I encountered an issue processing your resume with the external parser, but that's okay! Let's gather your information manually to ensure we capture everything perfectly."
       });
       startDataCollection();
     } finally {
