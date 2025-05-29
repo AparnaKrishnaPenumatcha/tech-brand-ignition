@@ -55,6 +55,9 @@ export interface ResumeData {
 interface RawSkill { name: string; }
 interface Skill     { name: string; level: number; category: string; }
 
+import { extractTextFromFile } from './textExtraction';
+import { parseResumeText } from './resumeParser';
+
 // Function to convert simple skills array to required format
 export const processSkills = (skills: RawSkill[]): Skill[] => {
   const categories = ['Frontend', 'Backend', 'Database', 'Tools', 'Other'];
@@ -101,93 +104,54 @@ export const processProjects = (projectsArray: any[]) => {
     // Create placeholder projects based on experience if available
     return [
       {
-        title: "SAP Commerce Cloud Implementation",
-        description: "Developed and implemented new functionality for Digital Commerce Platform on Commerce Cloud.",
-        tags: ["SAP", "Commerce Cloud", "E-commerce"]
-      },
-      {
-        title: "Architecture Blueprint Design",
-        description: "Created architectural overview, decisions, data flow diagrams for e-commerce solutions.",
-        tags: ["Architecture", "Design", "E-commerce"]
-      },
-      {
-        title: "Continuous Integration Pipeline",
-        description: "Implemented continuous delivery using Git, Maven, and Jenkins for SAP Commerce Cloud.",
-        tags: ["CI/CD", "Git", "Jenkins"]
+        title: "Professional Project",
+        description: "Developed and implemented solutions using modern technologies.",
+        tags: ["Development", "Implementation"]
       }
     ];
   }
   return projectsArray;
 };
 
-// Mock function to simulate resume file processing
-// In a real implementation, this would parse PDF/DOCX files
+// Real function to process resume files by extracting and parsing text
 export const processResumeFile = async (file: File): Promise<ResumeData> => {
-  // Simulate processing delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  console.log('=== processResumeFile: Starting real file processing ===');
+  console.log('File details:', { name: file.name, type: file.type, size: file.size });
   
-  // Mock parsed data - in a real implementation, this would parse the actual file
-  const mockParsedData: ResumeData = {
-    fileName: file.name,
-    fileData: null,
-    uploadDate: new Date().toISOString(),
-    personalInfo: {
-      name: "John Doe",
-      title: "Software Engineer",
-      email: "john.doe@email.com",
-      phone: "+1 (555) 123-4567",
-      location: "San Francisco, CA",
-      about: "Passionate software engineer with expertise in full-stack development"
-    },
-    summary: "Experienced software engineer with 5+ years in developing scalable web applications and leading cross-functional teams.",
-    education: [
-      {
-        degree: "Bachelor of Science in Computer Science",
-        institution: "University of California, Berkeley",
-        year: "2018"
-      }
-    ],
-    experience: [
-      {
-        title: "Senior Software Engineer",
-        company: "Tech Corp",
-        duration: "2022 - Present",
-        description: "Led development of microservices architecture serving 1M+ users daily"
+  try {
+    // Extract text from the file
+    const extractedText = await extractTextFromFile(file);
+    console.log('=== processResumeFile: Text extracted successfully ===');
+    console.log('Extracted text preview:', extractedText.substring(0, 300) + '...');
+    
+    // Parse the extracted text into structured data
+    const parsedData = parseResumeText(extractedText, file.name);
+    console.log('=== processResumeFile: Data parsed successfully ===', parsedData);
+    
+    return parsedData;
+  } catch (error) {
+    console.error('=== processResumeFile: Error processing file ===', error);
+    
+    // Fallback to basic extracted info if parsing fails
+    console.log('=== processResumeFile: Using fallback data ===');
+    return {
+      fileName: file.name,
+      fileData: null,
+      uploadDate: new Date().toISOString(),
+      personalInfo: {
+        name: '',
+        title: '',
+        email: '',
+        phone: '',
+        location: '',
+        about: ''
       },
-      {
-        title: "Software Engineer",
-        company: "StartupXYZ",
-        duration: "2019 - 2022",
-        description: "Developed and maintained full-stack applications using React and Node.js"
-      }
-    ],
-    skills: processSkills([
-      { name: "JavaScript" },
-      { name: "React" },
-      { name: "Node.js" },
-      { name: "Python" },
-      { name: "SQL" },
-      { name: "Git" }
-    ]),
-    projects: [
-      {
-        title: "E-commerce Platform",
-        description: "Built a full-stack e-commerce solution with React and Node.js",
-        tags: ["React", "Node.js", "MongoDB"],
-        links: {
-          demo: "https://demo.example.com",
-          code: "https://github.com/example/project"
-        }
-      }
-    ],
-    certifications: [
-      {
-        name: "AWS Certified Developer",
-        issuer: "Amazon Web Services",
-        year: "2023"
-      }
-    ]
-  };
-  
-  return mockParsedData;
+      summary: '',
+      education: [],
+      experience: [],
+      skills: [],
+      projects: [],
+      certifications: []
+    };
+  }
 };
