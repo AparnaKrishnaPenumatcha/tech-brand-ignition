@@ -14,13 +14,21 @@ interface ChatResumeBuilderProps {
 type FlowStep = 'welcome' | 'upload-summary' | 'data-collection' | 'complete';
 
 const FIELD_QUESTIONS: FieldQuestion[] = [
-  { field: 'personalInfo.profilePhoto', question: "Please upload a professional headshot or profile photo to display on your landing page.", inputType: 'file', required: false, category: 'Personal' },
-  { field: 'personalInfo.name', question: "What's your full name?", inputType: 'text', required: true, category: 'Personal' },
+  { field: 'personalInfo.name', question: "What is your full name?", inputType: 'text', required: true, category: 'Personal' },
+  { field: 'personalInfo.profilePhoto', question: "Please upload a professional headshot or profile photo.", inputType: 'file', required: false, category: 'Personal' },
+  { field: 'personalInfo.about', question: "Write a short bio sharing your mission, leadership drive, and career goals.", inputType: 'textarea', required: false, category: 'Personal' },
   { field: 'personalInfo.title', question: "What's your professional title or the title you'd like to be known by?", inputType: 'text', required: true, category: 'Personal' },
-  { field: 'personalInfo.email', question: "What's your email address?", inputType: 'text', required: true, category: 'Personal' },
-  { field: 'personalInfo.phone', question: "What's your phone number?", inputType: 'text', required: false, category: 'Personal' },
-  { field: 'personalInfo.location', question: "Where are you located? (City, State/Country)", inputType: 'text', required: false, category: 'Personal' },
+  { field: 'personalInfo.email', question: "What email should appear on your portfolio?", inputType: 'text', required: true, category: 'Contact' },
+  { field: 'personalInfo.phone', question: "What's your phone number?", inputType: 'text', required: false, category: 'Contact' },
+  { field: 'personalInfo.location', question: "Where are you located? (City, State/Country)", inputType: 'text', required: false, category: 'Contact' },
+  { field: 'personalInfo.linkedin', question: "What's your LinkedIn URL?", inputType: 'text', required: false, category: 'Contact' },
   { field: 'summary', question: "Please provide a brief professional summary about yourself.", inputType: 'textarea', required: false, category: 'About' },
+  { field: 'certifications', question: "List any professional certificates you hold (one per line, format: Certificate Name - Issuer - Year).", inputType: 'textarea', required: false, category: 'Qualifications' },
+  { field: 'projects', question: "Provide up to 5 projects, including the title, a one-sentence summary, and outcomes for each (format: Title | Description | Outcome).", inputType: 'textarea', required: false, category: 'Experience' },
+  { field: 'experience', question: "For each past role, share the company name, dates, and 2–3 key responsibilities or results (format: Title at Company | Duration | Description).", inputType: 'textarea', required: false, category: 'Experience' },
+  { field: 'leadership', question: "Describe any leadership roles or volunteer activities and their impact.", inputType: 'textarea', required: false, category: 'Leadership' },
+  { field: 'skills', question: "List your technical and soft skills (one per line).", inputType: 'textarea', required: false, category: 'Skills' },
+  { field: 'testimonials', question: "Provide up to 3 short quotes from mentors or colleagues, with names and roles (format: Quote - Name - Role).", inputType: 'textarea', required: false, category: 'Testimonials' },
 ];
 
 const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => {
@@ -51,7 +59,6 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     }]);
   }, []);
 
-  // Helper functions
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   };
@@ -81,19 +88,82 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
       email: '',
       phone: '',
       location: '',
-      about: ''
+      about: '',
+      profilePhoto: '',
+      linkedin: ''
     },
     summary: '',
     education: [],
     experience: [],
     skills: [],
     projects: [],
-    certifications: []
+    certifications: [],
+    leadership: '',
+    testimonials: []
   });
+
+  const parseListData = (text: string, field: string): any[] => {
+    if (!text.trim()) return [];
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    switch (field) {
+      case 'certifications':
+        return lines.map(line => {
+          const parts = line.split(' - ');
+          return {
+            name: parts[0] || line,
+            issuer: parts[1] || '',
+            year: parts[2] || ''
+          };
+        });
+      
+      case 'projects':
+        return lines.map(line => {
+          const parts = line.split(' | ');
+          return {
+            title: parts[0] || line,
+            description: parts[1] || '',
+            outcome: parts[2] || '',
+            tags: []
+          };
+        });
+      
+      case 'experience':
+        return lines.map(line => {
+          const parts = line.split(' | ');
+          return {
+            title: parts[0] || line,
+            company: parts[0]?.includes(' at ') ? parts[0].split(' at ')[1] : '',
+            duration: parts[1] || '',
+            description: parts[2] || ''
+          };
+        });
+      
+      case 'skills':
+        return lines.map(line => ({
+          name: line.trim(),
+          level: 80,
+          category: 'Other'
+        }));
+      
+      case 'testimonials':
+        return lines.map(line => {
+          const parts = line.split(' - ');
+          return {
+            quote: parts[0] || line,
+            name: parts[1] || '',
+            role: parts[2] || ''
+          };
+        });
+      
+      default:
+        return lines;
+    }
+  };
 
   const handleFileUpload = async (file: File, field?: string) => {
     if (field === 'personalInfo.profilePhoto') {
-      // Handle profile photo upload
       const reader = new FileReader();
       reader.onload = () => {
         setCollectedData(prev => setNestedValue(prev, field, reader.result as string));
@@ -114,7 +184,6 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
       return;
     }
 
-    // Handle resume upload
     if (!validateResumeFile(file)) return;
     
     setIsLoading(true);
@@ -191,7 +260,6 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     console.log('Parsed data:', parsedData);
     console.log('Collected data:', collectedData);
 
-    // Merge data with proper structure
     const baseData = getDefaultResumeData();
     const mergedData = {
       ...baseData,
@@ -199,12 +267,18 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
       ...collectedData
     };
 
-    // Ensure personalInfo is properly merged
     mergedData.personalInfo = {
       ...baseData.personalInfo,
       ...parsedData?.personalInfo,
       ...collectedData?.personalInfo
     };
+
+    ['certifications', 'projects', 'experience', 'skills', 'testimonials'].forEach(field => {
+      const textValue = getNestedValue(collectedData, field);
+      if (typeof textValue === 'string' && textValue.trim()) {
+        mergedData[field as keyof ResumeData] = parseListData(textValue, field) as any;
+      }
+    });
 
     console.log('Final merged data:', mergedData);
 
@@ -302,7 +376,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
           Build Your Resume & Portfolio
         </h1>
         <p className="text-navy-600">
-          Let me help you create a professional resume and showcase your talents
+          Let me help you create a professional resume and showcase your talents as a future leader in tech
         </p>
       </div>
 

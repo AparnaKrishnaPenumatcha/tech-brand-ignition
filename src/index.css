@@ -39,6 +39,40 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Custom Future Leader Theme Colors */
+    --navy-50: 240 20% 98%;
+    --navy-100: 240 20% 95%;
+    --navy-200: 240 20% 90%;
+    --navy-300: 240 20% 80%;
+    --navy-400: 240 20% 60%;
+    --navy-500: 240 30% 40%;
+    --navy-600: 240 40% 30%;
+    --navy-700: 240 50% 20%;
+    --navy-800: 240 60% 15%;
+    --navy-900: 240 70% 10%;
+    
+    --electric-50: 195 100% 95%;
+    --electric-100: 195 100% 90%;
+    --electric-200: 195 100% 80%;
+    --electric-300: 195 100% 70%;
+    --electric-400: 195 100% 60%;
+    --electric-500: 195 100% 50%;
+    --electric-600: 195 100% 40%;
+    --electric-700: 195 100% 30%;
+    --electric-800: 195 100% 20%;
+    --electric-900: 195 100% 10%;
+    
+    --teal-50: 180 100% 95%;
+    --teal-100: 180 100% 90%;
+    --teal-200: 180 100% 80%;
+    --teal-300: 180 100% 70%;
+    --teal-400: 180 100% 60%;
+    --teal-500: 180 100% 50%;
+    --teal-600: 180 100% 40%;
+    --teal-700: 180 100% 30%;
+    --teal-800: 180 100% 20%;
+    --teal-900: 180 100% 10%;
   }
 
   .dark {
@@ -85,6 +119,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
+    font-feature-settings: 'liga' 1, 'kern' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   html {
@@ -109,6 +146,26 @@
     animation: fadeIn 0.6s ease-in-out;
   }
   
+  .gradient-text {
+    @apply bg-gradient-to-r from-electric-500 to-teal-500 bg-clip-text text-transparent;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  .btn-primary {
+    @apply bg-electric-500 hover:bg-electric-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-electric-500 text-electric-600 hover:bg-electric-500 hover:text-white font-medium px-6 py-3 rounded-lg transition-all duration-200;
+  }
+  
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -119,11 +176,87 @@
       transform: translateY(0);
     }
   }
+  
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slideInFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInFromLeft 0.6s ease-out;
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInFromRight 0.6s ease-out;
+  }
 }
 
-/* Ensure smooth scrolling for anchor links */
-html {
-  scroll-behavior: smooth;
+/* Custom color utilities */
+@layer utilities {
+  .text-navy-50 { color: hsl(var(--navy-50)); }
+  .text-navy-100 { color: hsl(var(--navy-100)); }
+  .text-navy-200 { color: hsl(var(--navy-200)); }
+  .text-navy-300 { color: hsl(var(--navy-300)); }
+  .text-navy-400 { color: hsl(var(--navy-400)); }
+  .text-navy-500 { color: hsl(var(--navy-500)); }
+  .text-navy-600 { color: hsl(var(--navy-600)); }
+  .text-navy-700 { color: hsl(var(--navy-700)); }
+  .text-navy-800 { color: hsl(var(--navy-800)); }
+  .text-navy-900 { color: hsl(var(--navy-900)); }
+  
+  .bg-navy-50 { background-color: hsl(var(--navy-50)); }
+  .bg-navy-100 { background-color: hsl(var(--navy-100)); }
+  .bg-navy-200 { background-color: hsl(var(--navy-200)); }
+  .bg-navy-300 { background-color: hsl(var(--navy-300)); }
+  .bg-navy-400 { background-color: hsl(var(--navy-400)); }
+  .bg-navy-500 { background-color: hsl(var(--navy-500)); }
+  .bg-navy-600 { background-color: hsl(var(--navy-600)); }
+  .bg-navy-700 { background-color: hsl(var(--navy-700)); }
+  .bg-navy-800 { background-color: hsl(var(--navy-800)); }
+  .bg-navy-900 { background-color: hsl(var(--navy-900)); }
+  
+  .text-electric-50 { color: hsl(var(--electric-50)); }
+  .text-electric-100 { color: hsl(var(--electric-100)); }
+  .text-electric-200 { color: hsl(var(--electric-200)); }
+  .text-electric-300 { color: hsl(var(--electric-300)); }
+  .text-electric-400 { color: hsl(var(--electric-400)); }
+  .text-electric-500 { color: hsl(var(--electric-500)); }
+  .text-electric-600 { color: hsl(var(--electric-600)); }
+  .text-electric-700 { color: hsl(var(--electric-700)); }
+  .text-electric-800 { color: hsl(var(--electric-800)); }
+  .text-electric-900 { color: hsl(var(--electric-900)); }
+  
+  .bg-electric-50 { background-color: hsl(var(--electric-50)); }
+  .bg-electric-100 { background-color: hsl(var(--electric-100)); }
+  .bg-electric-200 { background-color: hsl(var(--electric-200)); }
+  .bg-electric-300 { background-color: hsl(var(--electric-300)); }
+  .bg-electric-400 { background-color: hsl(var(--electric-400)); }
+  .bg-electric-500 { background-color: hsl(var(--electric-500)); }
+  .bg-electric-600 { background-color: hsl(var(--electric-600)); }
+  .bg-electric-700 { background-color: hsl(var(--electric-700)); }
+  .bg-electric-800 { background-color: hsl(var(--electric-800)); }
+  .bg-electric-900 { background-color: hsl(var(--electric-900)); }
+  
+  .border-electric-500 { border-color: hsl(var(--electric-500)); }
+  .border-navy-200 { border-color: hsl(var(--navy-200)); }
+  .border-navy-300 { border-color: hsl(var(--navy-300)); }
 }
 
 /* Focus styles for accessibility */
@@ -158,4 +291,22 @@ textarea:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--navy-100));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--electric-300));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--electric-500));
 }

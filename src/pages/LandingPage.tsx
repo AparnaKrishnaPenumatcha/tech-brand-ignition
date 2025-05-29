@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import LandingHeader from '@/components/landing/LandingHeader';
+import GlobalNavigation from '@/components/navigation/GlobalNavigation';
 import EnhancedHero from '@/components/landing/EnhancedHero';
 import About from '@/components/About';
 import CertificatesSection from '@/components/CertificatesSection';
@@ -19,7 +19,6 @@ const LandingPage: React.FC = () => {
     const loadResumeData = () => {
       console.log('=== LandingPage: Loading resume data ===');
       
-      // Load resume data from localStorage if available
       const storedData = localStorage.getItem('resumeData');
       console.log('Raw data from localStorage:', storedData);
       
@@ -37,10 +36,8 @@ const LandingPage: React.FC = () => {
       }
     };
 
-    // Load data on component mount
     loadResumeData();
 
-    // Listen for resume data updates
     const handleResumeUpdate = () => {
       console.log('=== LandingPage: Resume update event received ===');
       loadResumeData();
@@ -57,7 +54,7 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen overflow-hidden">
-      <LandingHeader />
+      <GlobalNavigation />
       <main>
         <EnhancedHero resumeData={resumeData} />
         <About resumeData={resumeData} />
