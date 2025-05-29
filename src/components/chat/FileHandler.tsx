@@ -26,6 +26,7 @@ export const useFileHandler = ({
     setNestedValue: (obj: any, path: string, value: any) => any;
     askNextQuestion: () => void;
   }) => {
+    // Handle profile photo upload
     if (field === 'personalInfo.profilePhoto' && callbacks) {
       const reader = new FileReader();
       reader.onload = () => {
@@ -47,6 +48,7 @@ export const useFileHandler = ({
       return;
     }
 
+    // Handle resume file upload with OpenAI processing
     if (!validateResumeFile(file)) return;
     
     setIsLoading(true);
@@ -57,33 +59,46 @@ export const useFileHandler = ({
     
     addMessage({
       type: 'bot',
-      content: "Processing your resume... This might take a moment."
+      content: "Perfect! I'm now using AI to intelligently extract all information from your resume. This might take a moment..."
     });
 
     try {
-      console.log('=== FileHandler: Starting resume processing ===');
+      console.log('=== FileHandler: Starting OpenAI resume processing ===');
       const resumeData = await processResumeFile(file);
-      console.log('=== FileHandler: Resume processed successfully ===', resumeData);
+      console.log('=== FileHandler: OpenAI processing complete ===', resumeData);
       
       setParsedData(resumeData);
       
-      addMessage({
-        type: 'bot',
-        content: "Perfect! I've analyzed your resume and extracted the following information. Please review and let me know if you'd like to edit anything:"
-      });
+      // Check if we got meaningful data
+      const hasContent = resumeData.personalInfo.name || 
+                        resumeData.experience.length > 0 || 
+                        resumeData.skills.length > 0;
       
-      const summaryContent = formatResumeDataSummary(resumeData);
-      addMessage({
-        type: 'bot',
-        content: summaryContent
-      });
-      
-      setCurrentStep('upload-summary');
+      if (hasContent) {
+        addMessage({
+          type: 'bot',
+          content: "Excellent! I've successfully analyzed your resume using AI and extracted comprehensive information. Here's what I found:"
+        });
+        
+        const summaryContent = formatResumeDataSummary(resumeData);
+        addMessage({
+          type: 'bot',
+          content: summaryContent
+        });
+        
+        setCurrentStep('upload-summary');
+      } else {
+        addMessage({
+          type: 'bot',
+          content: "I had some difficulty extracting information from your resume. No worries - let's collect your information step by step!"
+        });
+        startDataCollection();
+      }
     } catch (error) {
-      console.error('=== FileHandler: Resume processing failed ===', error);
+      console.error('=== FileHandler: OpenAI processing failed ===', error);
       addMessage({
         type: 'bot',
-        content: "I had trouble processing your resume, but don't worry! Let's collect your information manually."
+        content: "I encountered an issue processing your resume with AI, but that's okay! Let's gather your information manually to ensure we capture everything perfectly."
       });
       startDataCollection();
     } finally {

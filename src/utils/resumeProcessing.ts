@@ -52,88 +52,62 @@ export interface ResumeData {
   }>;
 }
 
-interface RawSkill { name: string; }
-interface Skill     { name: string; level: number; category: string; }
+import { supabase } from '@/integrations/supabase/client';
 
-import { extractTextFromFile } from './textExtraction';
-import { parseResumeText } from './resumeParser';
-
-// Function to convert simple skills array to required format
-export const processSkills = (skills: RawSkill[]): Skill[] => {
-  const categories = ['Frontend', 'Backend', 'Database', 'Tools', 'Other'];
-  return skills.map((skillObj, index) => {
-    const { name: skill } = skillObj;
-    // Generate random level between 70 and 95
-    const level = Math.floor(Math.random() * 26) + 70;
-    // Assign category based on skill or use a simple rotation
-    let category = categories[index % categories.length];
-    
-    // Try to categorize common technologies
-    if (/html|css|javascript|jquery|react|vue|angular|typescript|ajax/i.test(skill)) {
-      category = 'Frontend';
-    } else if (/java|spring|boot|node|python|php|servlets|j2ee/i.test(skill)) {
-      category = 'Backend';
-    } else if (/oracle|sql|mongodb|mysql|postgresql|hana|database|hibernate/i.test(skill)) {
-      category = 'Database';
-    } else if (/git|jenkins|maven|eclipse|junit|mockito|docker|kubernetes/i.test(skill)) {
-      category = 'Tools';
-    }
-    
-    return {
-      name: skill,
-      level,
-      category
-    };
+// Convert file to base64 data URL for OpenAI vision
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 };
 
-// Function to process experience data
-export const processExperience = (experienceArray: any[]) => {
-  console.log("Experience array: ", experienceArray);
-  return experienceArray.map(exp => ({
-    title: exp.role || "Professional",
-    company: exp.company || "Company",
-    duration: exp.duration || "Present",
-    description: exp.responsibilities ? exp.responsibilities.join(" ") : "Professional experience"
-  }));
-};
-
-// Process projects or create placeholder projects
-export const processProjects = (projectsArray: any[]) => {
-  if (!projectsArray || projectsArray.length === 0) {
-    // Create placeholder projects based on experience if available
-    return [
-      {
-        title: "Professional Project",
-        description: "Developed and implemented solutions using modern technologies.",
-        tags: ["Development", "Implementation"]
-      }
-    ];
-  }
-  return projectsArray;
-};
-
-// Real function to process resume files by extracting and parsing text
+// Main function to process resume files using OpenAI
 export const processResumeFile = async (file: File): Promise<ResumeData> => {
-  console.log('=== processResumeFile: Starting real file processing ===');
+  console.log('=== processResumeFile: Starting OpenAI-based processing ===');
   console.log('File details:', { name: file.name, type: file.type, size: file.size });
   
   try {
-    // Extract text from the file
-    const extractedText = await extractTextFromFile(file);
-    console.log('=== processResumeFile: Text extracted successfully ===');
-    console.log('Extracted text preview:', extractedText.substring(0, 300) + '...');
+    // Convert file to base64 for OpenAI vision API
+    console.log('=== processResumeFile: Converting file to base64 ===');
+    const fileData = await fileToBase64(file);
+    console.log('=== processResumeFile: File converted successfully ===');
     
-    // Parse the extracted text into structured data
-    const parsedData = parseResumeText(extractedText, file.name);
-    console.log('=== processResumeFile: Data parsed successfully ===', parsedData);
+    // Call the Supabase edge function for OpenAI parsing
+    console.log('=== processResumeFile: Calling parse-resume edge function ===');
+    const { data, error } = await supabase.functions.invoke('parse-resume', {
+      body: { 
+        fileData,
+        fileName: file.name
+      }
+    });
     
-    return parsedData;
+    if (error) {
+      console.error('=== processResumeFile: Supabase function error ===', error);
+      throw new Error(`Resume parsing failed: ${error.message}`);
+    }
+    
+    if (!data || !data.resumeData) {
+      console.error('=== processResumeFile: No data returned ===', data);
+      throw new Error('No resume data returned from parsing service');
+    }
+    
+    console.log('=== processResumeFile: OpenAI parsing successful ===');
+    console.log('Extracted data preview:', {
+      name: data.resumeData.personalInfo?.name,
+      experienceCount: data.resumeData.experience?.length || 0,
+      skillsCount: data.resumeData.skills?.length || 0,
+      educationCount: data.resumeData.education?.length || 0
+    });
+    
+    return data.resumeData;
   } catch (error) {
-    console.error('=== processResumeFile: Error processing file ===', error);
+    console.error('=== processResumeFile: Error in OpenAI processing ===', error);
     
-    // Fallback to basic extracted info if parsing fails
-    console.log('=== processResumeFile: Using fallback data ===');
+    // Return a basic structure with file metadata on failure
+    console.log('=== processResumeFile: Returning fallback structure ===');
     return {
       fileName: file.name,
       fileData: null,
@@ -154,4 +128,51 @@ export const processResumeFile = async (file: File): Promise<ResumeData> => {
       certifications: []
     };
   }
+};
+
+// Legacy functions for backward compatibility
+interface RawSkill { name: string; }
+interface Skill { name: string; level: number; category: string; }
+
+export const processSkills = (skills: RawSkill[]): Skill[] => {
+  const categories = ['Frontend', 'Backend', 'Database', 'Tools', 'Other'];
+  return skills.map((skillObj, index) => {
+    const { name: skill } = skillObj;
+    const level = Math.floor(Math.random() * 26) + 70;
+    let category = categories[index % categories.length];
+    
+    if (/html|css|javascript|jquery|react|vue|angular|typescript|ajax/i.test(skill)) {
+      category = 'Frontend';
+    } else if (/java|spring|boot|node|python|php|servlets|j2ee/i.test(skill)) {
+      category = 'Backend';
+    } else if (/oracle|sql|mongodb|mysql|postgresql|hana|database|hibernate/i.test(skill)) {
+      category = 'Database';
+    } else if (/git|jenkins|maven|eclipse|junit|mockito|docker|kubernetes/i.test(skill)) {
+      category = 'Tools';
+    }
+    
+    return { name: skill, level, category };
+  });
+};
+
+export const processExperience = (experienceArray: any[]) => {
+  return experienceArray.map(exp => ({
+    title: exp.role || "Professional",
+    company: exp.company || "Company",
+    duration: exp.duration || "Present",
+    description: exp.responsibilities ? exp.responsibilities.join(" ") : "Professional experience"
+  }));
+};
+
+export const processProjects = (projectsArray: any[]) => {
+  if (!projectsArray || projectsArray.length === 0) {
+    return [
+      {
+        title: "Professional Project",
+        description: "Developed and implemented solutions using modern technologies.",
+        tags: ["Development", "Implementation"]
+      }
+    ];
+  }
+  return projectsArray;
 };
