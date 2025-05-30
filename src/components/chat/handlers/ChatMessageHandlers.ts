@@ -83,12 +83,34 @@ export const useChatMessageHandlers = ({
       });
       dataCollector.setCurrentQuestionIndex(prev => prev + 1);
       setTimeout(askNextQuestion, 500);
-    } else if (option === "No, looks good" || option === "Proceed with this information") {
+    } else if (option === "Build Profile with Current Data" || option === "Continue with Basic Info Only") {
       messageHandler.addMessage({
         type: 'bot',
-        content: "Perfect! Your information looks complete. Let me build your resume and portfolio now."
+        content: "Perfect! Building your resume and portfolio now with the available information."
       });
       flowManager.completeDataCollection();
+    } else if (option.startsWith("Complete ") || option.startsWith("Add ")) {
+      // Handle specific field editing requests from the summary
+      let fieldsToEdit: string[] = [];
+      
+      if (option.includes("Personal Info")) {
+        fieldsToEdit = ['personalInfo.name', 'personalInfo.title', 'personalInfo.email', 'personalInfo.phone', 'personalInfo.location'];
+      } else if (option.includes("Experience")) {
+        fieldsToEdit = ['experience'];
+      } else if (option.includes("Skills")) {
+        fieldsToEdit = ['skills'];
+      } else if (option.includes("Education")) {
+        fieldsToEdit = ['education'];
+      }
+      
+      if (fieldsToEdit.length > 0) {
+        flowManager.setFieldsToEdit(fieldsToEdit);
+        messageHandler.addMessage({
+          type: 'bot',
+          content: `Let's update your ${option.replace('Complete ', '').replace('Add ', '').toLowerCase()}. I'll ask you a few questions.`
+        });
+        startDataCollection();
+      }
     } else if (option.startsWith("Edit ")) {
       const fieldToEdit = option.replace("Edit ", "").toLowerCase();
       flowManager.setFieldsToEdit([fieldToEdit]);
