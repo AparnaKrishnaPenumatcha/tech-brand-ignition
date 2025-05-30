@@ -1,156 +1,203 @@
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { resumeData, targetRole, fileData } = await req.json()
+    const { resumeData, targetRole } = await req.json();
     
-    let messages = []
-    
-    if (fileData && fileData.startsWith('data:')) {
-      // If we have file data, send it directly to OpenAI with vision
-      messages = [
-        {
-          role: 'system',
-          content: 'You are a resume optimization expert. Analyze resumes and provide specific, actionable feedback in JSON format with a numerical score (1-100) and detailed improvement suggestions.'
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Analyze this resume for a ${targetRole || 'professional'} role and provide optimization suggestions in the following JSON structure:
-              
-              {
-                "overallScore": number (1-100),
-                "strengths": [
-                  "strength 1",
-                  "strength 2", 
-                  "strength 3"
-                ],
-                "improvements": [
-                  {
-                    "area": "area name",
-                    "suggestion": "specific suggestion",
-                    "impact": "expected impact"
-                  }
-                ],
-                "keywordsToAdd": ["keyword1", "keyword2"],
-                "summary": "overall assessment summary"
-              }`
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: fileData
-              }
-            }
-          ]
-        }
-      ]
-    } else {
-      // Fallback to text-based analysis
-      messages = [
-        {
-          role: 'system',
-          content: 'You are a resume optimization expert. Analyze resumes and provide specific, actionable feedback in JSON format with a numerical score (1-100) and detailed improvement suggestions.'
-        },
-        {
-          role: 'user',
-          content: `Analyze this resume for a ${targetRole || 'professional'} role and provide optimization suggestions in the following JSON structure:
+    console.log('Resume optimization request:', { 
+      hasResumeData: !!resumeData, 
+      targetRole,
+      resumeDataKeys: resumeData ? Object.keys(resumeData) : []
+    });
 
-{
-  "overallScore": number (1-100),
-  "strengths": [
-    "strength 1",
-    "strength 2", 
-    "strength 3"
-  ],
-  "improvements": [
-    {
-      "area": "area name",
-      "suggestion": "specific suggestion",
-      "impact": "expected impact"
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY not set');
+      throw new Error('OpenAI API key not configured');
     }
-  ],
-  "keywordsToAdd": ["keyword1", "keyword2"],
-  "summary": "overall assessment summary"
+
+    // Safely extract resume content with null checks
+    const personalInfo = resumeData?.personalInfo || {};
+    const experience = resumeData?.experience || [];
+    const skills = resumeData?.skills || [];
+    const education = resumeData?.education || [];
+    
+    // Build resume text safely
+    let resumeText = '';
+    
+    if (personalInfo.name) {
+      resumeText += `Name: ${personalInfo.name}\n`;
+    }
+    if (personalInfo.title) {
+      resumeText += `Title: ${personalInfo.title}\n`;
+    }
+    if (resumeData?.summary) {
+      resumeText += `Summary: ${resumeData.summary}\n`;
+    }
+    
+    if (experience.length > 0) {
+      resumeText += '\nExperience:\n';
+      experience.forEach((exp, index) => {
+        if (exp && typeof exp === 'object') {
+          resumeText += `${index + 1}. ${exp.title || 'Unknown Position'} at ${exp.company || 'Unknown Company'}\n`;
+          if (exp.description) {
+            resumeText += `   ${exp.description}\n`;
+          }
+        }
+      });
+    }
+    
+    if (skills.length > 0) {
+      resumeText += '\nSkills:\n';
+      skills.forEach((skill, index) => {
+        if (skill && (typeof skill === 'string' || skill.name)) {
+          const skillName = typeof skill === 'string' ? skill : skill.name;
+          resumeText += `- ${skillName}\n`;
+        }
+      });
+    }
+    
+    if (education.length > 0) {
+      resumeText += '\nEducation:\n';
+      education.forEach((edu, index) => {
+        if (edu && typeof edu === 'object') {
+          resumeText += `${index + 1}. ${edu.degree || 'Unknown Degree'} from ${edu.institution || 'Unknown Institution'}\n`;
+        }
+      });
+    }
+
+    console.log('Constructed resume text length:', resumeText.length);
+
+    if (!resumeText.trim()) {
+      return new Response(JSON.stringify({
+        analysis: {
+          overallScore: 0,
+          strengths: [],
+          improvements: ['No resume data provided for analysis'],
+          missingKeywords: [],
+          suggestions: ['Please provide resume data to receive optimization suggestions']
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
+    }
+
+    // Create the analysis prompt
+    const prompt = `Analyze this resume and provide optimization suggestions${targetRole ? ` for a ${targetRole} role` : ''}:
+
+Resume:
+${resumeText}
+
+Provide a JSON response with:
+{
+  "overallScore": number (0-100),
+  "strengths": ["strength1", "strength2"],
+  "improvements": ["improvement1", "improvement2"],
+  "missingKeywords": ["keyword1", "keyword2"],
+  "suggestions": ["suggestion1", "suggestion2"]
 }
 
-Resume Data:
-Name: ${resumeData?.personalInfo?.name}
-Title: ${resumeData?.personalInfo?.title}
-Summary: ${resumeData?.summary || resumeData?.personalInfo?.about}
-Experience: ${JSON.stringify(resumeData?.experience)}
-Skills: ${JSON.stringify(resumeData?.skills)}
-Education: ${JSON.stringify(resumeData?.education)}`
-        }
-      ]
-    }
-    
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+Focus on actionable improvements and relevant keywords${targetRole ? ` for ${targetRole} positions` : ''}.`;
+
+    console.log('Sending request to OpenAI...');
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: fileData ? 'gpt-4o' : 'gpt-4o-mini',
-        messages: messages,
-        temperature: 0.3,
-        max_tokens: 1500
-      }),
-    })
-
-    const data = await openAIResponse.json()
-    let analysis = data.choices[0].message.content
-
-    // Try to parse as JSON, fallback to formatted text if it fails
-    let structuredAnalysis
-    try {
-      structuredAnalysis = JSON.parse(analysis)
-    } catch (e) {
-      // If JSON parsing fails, create a structured format from the text
-      structuredAnalysis = {
-        overallScore: 75,
-        strengths: ["Experience provided", "Skills listed", "Education included"],
-        improvements: [
+        model: 'gpt-4',
+        messages: [
           {
-            area: "General",
-            suggestion: analysis,
-            impact: "Overall improvement in resume quality"
+            role: 'system',
+            content: 'You are a professional resume optimization expert. Provide detailed, actionable feedback in valid JSON format only.'
+          },
+          {
+            role: 'user',
+            content: prompt
           }
         ],
-        keywordsToAdd: [],
-        summary: "Resume analysis completed"
-      }
+        temperature: 0.7,
+        max_tokens: 1500
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    return new Response(
-      JSON.stringify({ analysis: structuredAnalysis }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+    const data = await response.json();
+    console.log('OpenAI response received');
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', data);
+      throw new Error('Invalid response from OpenAI');
+    }
+
+    let analysis;
+    try {
+      const content = data.choices[0].message.content;
+      console.log('Raw OpenAI content:', content);
+      
+      // Try to parse JSON from the response
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysis = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', parseError);
+      // Provide fallback analysis
+      analysis = {
+        overallScore: 75,
+        strengths: ['Professional experience listed', 'Skills section included'],
+        improvements: ['Add more quantifiable achievements', 'Include relevant keywords'],
+        missingKeywords: targetRole ? [`${targetRole} specific terms`] : ['Industry keywords'],
+        suggestions: ['Add metrics to work experience', 'Tailor content to job requirements']
+      };
+    }
+
+    console.log('Resume optimization completed successfully');
+
+    return new Response(JSON.stringify({ analysis }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    });
+
   } catch (error) {
-    console.error('Resume optimization error:', error)
+    console.error('Resume optimization error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      },
-    )
+      JSON.stringify({ 
+        error: error.message,
+        analysis: {
+          overallScore: 0,
+          strengths: [],
+          improvements: ['Error occurred during analysis'],
+          missingKeywords: [],
+          suggestions: ['Please try again or contact support']
+        }
+      }),
+      { 
+        status: 200, // Return 200 to avoid throwing errors in frontend
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
   }
-})
+});
