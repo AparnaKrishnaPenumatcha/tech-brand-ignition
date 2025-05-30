@@ -83,11 +83,15 @@ export const useChatMessageHandlers = ({
       });
       dataCollector.setCurrentQuestionIndex(prev => prev + 1);
       setTimeout(askNextQuestion, 500);
-    } else if (option === "Build Profile with Current Data" || option === "Continue with Basic Info Only") {
+    } else if (option === "Build Profile with Current Data" || option === "Continue with Basic Info Only" || option === "Proceed with this information") {
+      console.log('=== ChatMessageHandlers: Build profile option selected ===');
       messageHandler.addMessage({
         type: 'bot',
         content: "Perfect! Building your resume and portfolio now with the available information."
       });
+      
+      // Immediately complete the data collection flow
+      console.log('=== ChatMessageHandlers: Calling completeDataCollection ===');
       flowManager.completeDataCollection();
     } else if (option.startsWith("Complete ") || option.startsWith("Add ")) {
       // Handle specific field editing requests from the summary

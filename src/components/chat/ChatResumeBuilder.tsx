@@ -36,6 +36,18 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
     startDataCollection
   });
 
+  const handleProceedWithData = () => {
+    console.log('=== ChatResumeBuilder: handleProceedWithData called ===');
+    messageHandler.addMessage({
+      type: 'user',
+      content: "Proceed with this information"
+    });
+    
+    // Directly trigger the completion
+    console.log('=== ChatResumeBuilder: Calling completeDataCollection ===');
+    flowManager.completeDataCollection();
+  };
+
   return (
     <div className="max-w-4xl mx-auto">
       <ChatHeader />
@@ -48,13 +60,7 @@ const ChatResumeBuilder: React.FC<ChatResumeBuilderProps> = ({ onComplete }) => 
               flowManager.setFieldsToEdit(fields);
               startDataCollection();
             }}
-            onAcceptAll={() => {
-              messageHandler.addMessage({
-                type: 'user',
-                content: "Proceed with this information"
-              });
-              handleOptionSelect("Proceed with this information");
-            }}
+            onAcceptAll={handleProceedWithData}
           />
         </div>
       )}
