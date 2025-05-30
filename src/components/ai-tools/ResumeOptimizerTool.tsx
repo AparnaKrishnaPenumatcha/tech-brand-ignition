@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,38 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
       }
     }
     return null;
+  };
+
+  const transformApiResponseToAnalysisResult = (apiResponse: any): AnalysisResult => {
+    console.log('🔄 Transforming API response:', apiResponse);
+    
+    // Transform improvements from string array to object array
+    const improvements = Array.isArray(apiResponse.improvements) 
+      ? apiResponse.improvements.map((improvement: string, index: number) => ({
+          area: `Improvement ${index + 1}`,
+          suggestion: improvement,
+          impact: 'Medium'
+        }))
+      : [];
+
+    // Map missingKeywords to keywordsToAdd
+    const keywordsToAdd = apiResponse.missingKeywords || [];
+
+    // Generate a summary from suggestions if not provided
+    const summary = apiResponse.summary || 
+      (Array.isArray(apiResponse.suggestions) ? apiResponse.suggestions.join(' ') : 
+       'Focus on adding more quantifiable achievements and relevant keywords to improve your resume impact.');
+
+    const result: AnalysisResult = {
+      overallScore: apiResponse.overallScore || 0,
+      strengths: apiResponse.strengths || [],
+      improvements,
+      keywordsToAdd,
+      summary
+    };
+
+    console.log('✅ Transformed result:', result);
+    return result;
   };
 
   const handleOptimize = async () => {
@@ -101,14 +134,17 @@ const ResumeOptimizerTool: React.FC<ResumeOptimizerToolProps> = ({ onBack }) => 
         parsedResult.improvements = processedImprovements;
       }
       
-      console.log('📋 Final analysis result structure:');
-      console.log('- Overall Score:', parsedResult?.overallScore);
-      console.log('- Strengths Count:', parsedResult?.strengths?.length || 0);
-      console.log('- Improvements Count:', parsedResult?.improvements?.length || 0);
-      console.log('- Keywords Count:', parsedResult?.keywordsToAdd?.length || 0);
-      console.log('- Summary Length:', parsedResult?.summary?.length || 0);
+      // Transform the API response to match AnalysisResult interface
+      const transformedAnalysis = transformApiResponseToAnalysisResult(parsedResult);
       
-      setAnalysis(parsedResult);
+      console.log('📋 Final analysis result structure:');
+      console.log('- Overall Score:', transformedAnalysis.overallScore);
+      console.log('- Strengths Count:', transformedAnalysis.strengths.length);
+      console.log('- Improvements Count:', transformedAnalysis.improvements.length);
+      console.log('- Keywords Count:', transformedAnalysis.keywordsToAdd.length);
+      console.log('- Summary Length:', transformedAnalysis.summary.length);
+      
+      setAnalysis(transformedAnalysis);
       
       toast({
         title: "Analysis complete!",
