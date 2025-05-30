@@ -28,6 +28,8 @@ export const useChatMessageHandlers = ({
   };
 
   const handleSendMessage = (message: string, field?: string) => {
+    console.log('=== ChatMessageHandlers: handleSendMessage ===', { message, field });
+    
     messageHandler.addMessage({
       type: 'user',
       content: message
@@ -53,6 +55,8 @@ export const useChatMessageHandlers = ({
   };
 
   const handleOptionSelect = (option: string, field?: string) => {
+    console.log('=== ChatMessageHandlers: handleOptionSelect ===', { option, field });
+    
     messageHandler.addMessage({
       type: 'user',
       content: option
@@ -69,6 +73,7 @@ export const useChatMessageHandlers = ({
         type: 'bot',
         content: "Perfect! I'll guide you through entering your information step by step."
       });
+      console.log('=== ChatMessageHandlers: Starting manual data collection ===');
       startDataCollection();
     } else if (option === 'Skip this field' && field) {
       dataCollector.setIgnoredFields(prev => new Set([...prev, field]));

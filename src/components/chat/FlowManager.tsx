@@ -151,6 +151,12 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
     }
   };
 
+  const startDataCollectionFlow = () => {
+    console.log('=== FlowManager: Starting data collection flow ===');
+    setCurrentStep('data-collection');
+    return true;
+  };
+
   const completeDataCollection = () => {
     console.log('=== FlowManager: Starting data completion ===');
     console.log('Parsed data:', parsedData);
@@ -197,6 +203,7 @@ export const useFlowManager = (onComplete: (data: ResumeData) => void) => {
     fieldsToEdit,
     setFieldsToEdit,
     completeDataCollection,
+    startDataCollectionFlow,
     getDefaultResumeData
   };
 };

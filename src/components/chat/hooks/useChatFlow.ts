@@ -15,6 +15,9 @@ export const useChatFlow = (onComplete: (data: ResumeData) => void) => {
   const messageHandler = useMessageHandler();
 
   const askNextQuestion = () => {
+    console.log('=== useChatFlow: askNextQuestion called ===');
+    console.log('Current step:', flowManager.currentStep);
+    
     dataCollector.askNextQuestion({
       parsedData: flowManager.parsedData,
       collectedData: flowManager.collectedData,
@@ -25,12 +28,25 @@ export const useChatFlow = (onComplete: (data: ResumeData) => void) => {
   };
 
   const startDataCollection = () => {
-    flowManager.setCurrentStep('data-collection');
+    console.log('=== useChatFlow: Starting data collection ===');
+    
+    // Start the data collection flow
+    flowManager.startDataCollectionFlow();
+    
+    // Add initial message
     messageHandler.addMessage({
       type: 'bot',
       content: "Let's start building your profile! I'll ask you some questions to gather your information."
     });
-    askNextQuestion();
+    
+    // Reset question index and start asking questions
+    dataCollector.setCurrentQuestionIndex(0);
+    
+    // Ask the first question after a short delay to ensure the flow state is updated
+    setTimeout(() => {
+      console.log('=== useChatFlow: Triggering first question ===');
+      askNextQuestion();
+    }, 100);
   };
 
   const fileHandler = useFileHandler({
